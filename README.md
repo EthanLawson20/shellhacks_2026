@@ -29,21 +29,13 @@ Built in 36 hours at ShellHacks 2026 (FIU, Miami)
 
 ## Tech Stack
 
-| Layer | Technology |
-|--------|------------|
-| Hardware | ESP32 |
-| RF Sensing | Espressif ESP-CSI |
-| Audio AI | Edge Impulse / TensorFlow Lite Micro |
-| Firmware | ESP-IDF |
-| Backend | Python |
-| Frontend | React |
-
----
+Hardware:
+Firmware:
+Backend:
+Frontend:
 
 ## Project Structure
-
-
----
+...
 
 ## Getting Started
 
@@ -57,29 +49,9 @@ Built in 36 hours at ShellHacks 2026 (FIU, Miami)
 
 ### Flash Firmware
 
-```bash
-cd firmware/sender
-idf.py build flash monitor
-```
-
-Repeat for gateway and sensor nodes.
 
 ### Start Backend
 
-```bash
-cd backend
-pip install -r requirements.txt
-python gateway.py
-```
-
-### Launch Dashboard
-
-```bash
-cd dashboard
-npm install
-npm run dev
-```
----
 
 ## Use Cases
 
