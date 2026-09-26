@@ -1,178 +1,258 @@
-# Phase — see beyond the horizon
+# Phase — See Beyond the Horizon
 
-> A low-cost ESP32 sensor network that fuses **WiFi Channel State Information (CSI)** and **on-device audio classification** to detect people behind walls and under debris, and ranks where rescuers should search first.
+<p align="center">
+  <img src="docs/banner.png" alt="Phase Banner" width="100%">
+</p>
 
-Built in 36 hours at **ShellHacks 2026** (FIU, Miami).
+<h1 align="center">Phase — See Beyond the Horizon</h1>
+
+<p align="center">
+A low-cost ESP32 sensor network that combines <strong>WiFi Channel State Information (CSI)</strong> and <strong>on-device AI audio classification</strong> to help rescuers prioritize where to search first.
+</p>
+
+<p align="center">
+
+🏆 Built in 36 hours at <strong>ShellHacks 2026</strong> (FIU, Miami)
+
+</p>
 
 ---
 
-## The challenge
+## 🎥 Demo
 
-In a rescue, every second spent searching the wrong spot can cost a life.
+> **Coming Soon**
+>
+> Add a GIF or YouTube demo here.
 
-- **Listening devices can't tell a person from debris.** At the 2021 Surfside collapse, rescuers had to chase every sound, knowing it might be steel twisting or debris shifting rather than a person tapping or calling out.
-- **Listening can't find unconscious victims.** Someone who is breathing but can't call for help makes no sound at all.
+---
 
-Radar tools that detect breathing exist, but they cost thousands of dollars each and scan one spot at a time.
+## 🚀 At a Glance
+
+- 📡 WiFi CSI motion detection
+- 🫁 Breathing-band sensing
+- 🔊 Edge AI audio classification
+- 🧠 Multi-sensor fusion
+- 🗺️ Live blueprint visualization
+- 📋 Ranked rescue priorities
+- 💰 Built with low-cost ESP32 hardware
+
+---
+
+## The Challenge
+
+In disaster response, every minute matters.
+
+Traditional listening devices cannot reliably distinguish survivors from environmental noise, and they cannot detect unconscious victims who are breathing but unable to call for help.
+
+Specialized breathing radars exist but are expensive and typically scan only one location at a time.
+
+Phase explores whether a network of inexpensive ESP32 devices can continuously monitor multiple zones simultaneously and provide rescuers with a prioritized search map.
+
+---
 
 ## Our Solution
 
-Place several cheap ESP32 nodes around a debris pile or burning building. Each node:
+Several ESP32 sensing nodes are deployed around a collapsed structure or damaged building.
 
-1. **Senses motion and breathing** through walls and debris using WiFi CSI, the tiny changes in radio signals caused by a moving or breathing body.
-2. **Listens and classifies sound on-device** as human (voice, tapping) or non-human (debris, machinery, background noise). Raw audio never leaves the node.
+Each node:
 
-The dashboard **fuses both signals** onto the building blueprint and produces a **live priority list** of zones to search.
+1. Detects motion and breathing using WiFi CSI.
+2. Performs on-device audio classification to distinguish human sounds from environmental noise.
+3. Sends only processed information to a central gateway. Raw audio never leaves the device.
 
-### Why fusion matters
+The fusion engine combines both sensing modalities to estimate the likelihood of human presence and continuously updates a live rescue dashboard.
 
-| Signal pattern at a node | Priority | Meaning |
-|---|---|---|
-| Breathing on CSI, **no** human sound | **P1 – Critical** | Likely unconscious; only detectable by fusion |
-| CSI motion/breathing **+** voice or tapping | **P1 – High confidence** | Confirmed, responsive survivor |
-| Human sound only, or CSI motion only (repeating) | **P2 – Probable** | Confirm with a second tool (dog, camera) |
-| Single transient event, or debris-type sound | **P3 – Low** | Log and re-check |
-| Nothing | **No signal detected** | **Never shown as "clear" or "empty"** |
+> [!NOTE]
+> Phase is intended to **assist** search-and-rescue teams. It does **not** replace trained responders, rescue dogs, cameras, or specialized radar systems.
 
 ---
 
-## Features
+## Why Sensor Fusion Matters
 
-- 📡 **CSI motion detection** across multiple sensor nodes, shown as a live heat map
-- 🫁 **Breathing-band detection** (0.1–0.5 Hz) for still or unresponsive people <!-- remove if not working in final build -->
-- 🔊 **Audio classification** on the node: human voice / tapping / background
-- 🧠 **Sensor fusion scoring** with persistence windows, cross-node agreement, and signal decay
-- 🗺️ **Blueprint upload** to map nodes and detections onto a real floor plan
-- 📋 **Ranked rescue priority list** that re-sorts live
+| Detection | Priority | Interpretation |
+|------------|----------|----------------|
+| CSI breathing + no human sound | **P1 – Critical** | Possible unconscious survivor |
+| CSI + voice/tapping | **P1 – High Confidence** | Responsive survivor |
+| CSI only or human sound only | **P2 – Probable** | Verify with another tool |
+| Single transient event | **P3 – Low** | Monitor |
+| No detection | No signal | Never interpreted as "clear" |
 
 ---
 
-## Network Architecture 
+## ✨ Features
 
-We use a **star network**: every node reports directly to one central gateway.
+- 📡 CSI-based motion detection
+- 🫁 Breathing frequency analysis
+- 🔊 On-device audio classification
+- 🧠 Multi-sensor fusion
+- 🗺️ Blueprint overlay
+- 📋 Dynamic rescue priority list
+- 🔋 Battery monitoring
+- 📈 Real-time dashboard
 
-```mermaid
-flowchart TB
-    PC[Computer<br/>fusion engine + dashboard]
-    TX[ESP32 Sender<br/>transmits packets] 
-    PC --- TX
-    TX -.->|WiFi packets| N1[Node 1<br/>CSI + mic]
-    TX -.->|WiFi packets| N2[Node 2<br/>CSI + mic]
-    TX -.->|WiFi packets| N3[Node 3<br/>CSI + mic]
-    N1 -->|motion · packet data · audio label · battery %| GW[ESP32 Gateway]
-    N2 --> GW
-    N3 --> GW
-    GW --- PC
+---
+
+## 🏗️ Network Architecture
+
+<p align="center">
+  <img src="docs/network_architecture.png" alt="Network Architecture">
+</p>
+
+The system follows a **star topology**.
+
+1. A sender ESP32 continuously transmits WiFi packets.
+2. Sensor nodes capture CSI and classify nearby sounds.
+3. A gateway receives summarized data.
+4. The fusion engine combines evidence.
+5. The dashboard visualizes detections and rescue priorities.
+
+---
+
+## 🖥️ Dashboard
+
+<p align="center">
+  <img src="docs/dashboard.png" alt="Dashboard Screenshot">
+</p>
+
+The dashboard displays:
+
+- Live building blueprint
+- Node locations
+- Heat map
+- Rescue priority ranking
+- Sensor health
+
+---
+
+## 🛠️ Tech Stack
+
+| Layer | Technology |
+|--------|------------|
+| Hardware | ESP32 |
+| RF Sensing | Espressif ESP-CSI |
+| Audio AI | Edge Impulse / TensorFlow Lite Micro |
+| Firmware | ESP-IDF |
+| Backend | Python |
+| Frontend | React |
+
+---
+
+## 📂 Project Structure
+
+```text
+Phase/
+├── firmware/
+│   ├── sender/
+│   ├── node/
+│   └── gateway/
+├── backend/
+├── dashboard/
+├── docs/
+└── README.md
 ```
 
-1. **Sender** (connected to the computer) transmits packets continuously so nodes always have a signal to measure. A second sender can be added for more coverage.
-2. **Nodes** capture CSI per packet and compute motion and breathing features. The onboard mic runs a small classifier and sends only the label and confidence. Each node also reports its battery level.
-3. **Gateway** (connected to the computer) collects data from all nodes and passes it to the computer over [serial / USB — confirm].
-4. **Fusion engine** on the computer combines CSI and audio per zone into a priority score.
-5. **Dashboard** renders the heat map, blueprint overlay, and ranked list.
-
 ---
 
-## Tech Stack
+## 🚀 Getting Started
 
-| Layer | Tools |
-|---|---|
-| Hardware | ESP32 [model, e.g. ESP32-S3] ×3, [microphone model], [power source] |
-| Firmware | [ESP-IDF / Arduino], [esp-csi], [Edge Impulse / TFLite Micro] |
-| Backend | [Python / Node], [database, e.g. Postgres / Tiger Data] |
-| Frontend | [React / HTML], [charting / 3D library] |
+### Hardware
 
----
+- ESP32 Sender
+- ESP32 Gateway
+- Two or more ESP32 Sensor Nodes
+- USB cables or power banks
+- Laptop
 
-## Getting Started
+### Flash Firmware
 
-### Hardware you need
-- ESP32 boards: 1–2 senders, 1 gateway, and 2+ nodes (nodes have microphones)
-- USB cables or power banks for each node
-- A laptop connected to the sender and gateway, running the dashboard
-
-### 1. Flash the firmware
 ```bash
-# Sender node
 cd firmware/sender
-[idf.py build flash monitor]   # replace with your actual command
-
-# Receiver nodes
-cd firmware/receiver
-[idf.py build flash monitor]
+idf.py build flash monitor
 ```
 
-### 2. Start the gateway
+Repeat for gateway and sensor nodes.
+
+### Start Backend
+
 ```bash
 cd backend
-[pip install -r requirements.txt]
-[python gateway.py --port /dev/ttyUSB0]
+pip install -r requirements.txt
+python gateway.py
 ```
 
-### 3. Start the dashboard
+### Launch Dashboard
+
 ```bash
 cd dashboard
-[npm install]
-[npm run dev]
+npm install
+npm run dev
 ```
-Open `http://localhost:[port]`.
-
-### 4. Calibrate
-Place the nodes, keep the area **empty for ~30 seconds**, and press **Calibrate** to record a baseline. Recalibrate if furniture or nodes move.
-
-### 5. Try it
-- Wave a hand between nodes → the zone lights up on the heat map
-- Knock on a surface near a node → audio classifies "tapping" and the zone's priority rises
 
 ---
 
-## Setup Requirements
+## ⚙️ Calibration
 
-- **Zone-level, not exact location.** With 3 nodes we detect which zone activity is in, not precise coordinates.
-- **Short range.** Detection works over a few meters; performance drops through dense concrete and is blocked by metal.
-- **Needs calibration.** CSI is sensitive to changes in the environment and needs an empty baseline.
-- **Power-hungry.** CSI keeps the radio active continuously, so nodes need steady power.
-- **Crowded 2.4 GHz.** Busy WiFi environments add noise; we use a dedicated sender node and a quiet channel.
-- **Gateway range.** In a star network every node must be within radio range of the gateway, and the gateway is a single point of failure. A mesh (nodes relaying for each other) is on our roadmap for larger sites.
-- **Multiple people** in one zone appear as a single detection.
-- **Not yet field-validated.** Accuracy has only been tested in indoor rooms, not real rubble.
+1. Place all sensor nodes.
+2. Keep the monitored area empty for approximately 30 seconds.
+3. Record a baseline.
+4. Begin monitoring.
+
+Recalibrate whenever the environment changes.
 
 ---
 
-## Guardrails
+## ⚠️ Current Limitations
 
-This technology can find survivors, and it could also be misused to watch people. We built limits into the design:
-
-- **Human in the loop.** The system recommends a search order; people decide. It never auto-dispatches or marks a zone safe.
-- **"No signal" ≠ "no one."** The UI never labels a zone empty or cleared.
-- **No raw audio.** Sound is classified on the node; only labels leave the device.
-- **No identity.** The system detects presence and activity, not who someone is.
-- **Authorized use only.** Intended for vetted emergency and public-safety agencies. For law-enforcement use in a home, sessions should require a logged warrant or declared emergency.
-- **Audit trail and retention.** Sessions should log who, where, when, and under what authority; data should auto-delete after a set period. <!-- mark which of these are implemented vs. roadmap -->
+- Zone-level detection rather than precise localization.
+- Performance decreases through dense concrete and metal.
+- Requires environmental calibration.
+- Continuous CSI sensing increases power consumption.
+- Multiple people within one zone may appear as a single detection.
+- Indoor prototype only; not yet validated on real disaster sites.
 
 ---
 
-## Use Cases
+## 🔒 Responsible Use
 
-- **Collapsed-structure search and rescue** (primary): triage large debris fields and send dogs, cameras, and radar to the most likely zones first
-- **Barricade and hostage situations:** know where people are in a room before entry
-- **Firefighting:** RF sensing works through smoke, where cameras can't see
-- **Hurricane aftermath:** fast welfare checks on damaged homes before crews enter
+Phase is designed with privacy and safety in mind.
 
----
-
-## Roadmap
-
-- 🚁 **Drone-deployed nodes** that are dropped into position to form the network automatically
-- 🕸️ **Mesh networking** so nodes relay data through each other, extending range and removing the single point of failure
-- 🔋 Ruggedized, battery-powered nodes lasting a full operational period
-- 🔐 Encrypted, authenticated node communication and signed firmware
-- 🧍 Pose estimation research using the same CSI pipeline
-- 🧪 Field testing with a local fire rescue training site
+- Human operators always make final decisions.
+- No raw audio is transmitted.
+- Presence detection only—no identity recognition.
+- "No signal" never means "area cleared."
+- Intended for authorized emergency response.
 
 ---
 
-## Reference 
+## 🌎 Potential Applications
 
-- [Espressif esp-csi](https://github.com/espressif/esp-csi) — CSI examples and tooling
-- 
+- Collapsed structure search and rescue
+- Firefighter situational awareness
+- Hurricane response
+- Disaster recovery
+- Emergency building assessment
+
+---
+
+## 🛣️ Roadmap
+
+- [ ] Mesh networking
+- [ ] Drone deployment
+- [ ] Rugged enclosure
+- [ ] Extended battery life
+- [ ] Secure communication
+- [ ] Field testing with rescue agencies
+- [ ] Multi-person tracking research
+
+---
+
+## 📚 References
+
+- https://github.com/espressif/esp-csi
+
+---
+
+## 📄 License
+
+Choose your preferred open-source license (MIT recommended).
+
