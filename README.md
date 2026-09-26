@@ -1,27 +1,19 @@
 <h1 align="center">Phase — See Beyond the Horizon</h1>
 
-<h4 align="left">
+<h2 align="left">
 Phase is a network of microcontrollers that combines Wi-Fi sensing and audio analysis to help rescuers identify possible signs of life.
-</h4>
+</h2>
 
-🏆 Built in 36 hours at ShellHacks 2026 (FIU, Miami)
+Built in 36 hours at ShellHacks 2026 (FIU, Miami)
 
 </p>
 
----
+## Features
 
-## ✨ Features
-
-- 📡 CSI-based motion detection
-- 🫁 Breathing frequency analysis
-- 🔊 On-device audio classification
-- 🧠 Multi-sensor fusion
-- 🗺️ Blueprint overlay
-- 📋 Dynamic rescue priority list
-- 🔋 Battery monitoring
-- 📈 Real-time dashboard
-
----
+- CSI-based motion detection
+- On-device audio classification
+- Dynamic rescue priority list
+- Real-time dashboard
 
 ## Network Architecture
 
@@ -35,9 +27,7 @@ Phase is a network of microcontrollers that combines Wi-Fi sensing and audio ana
 4. **Fusion engine** on the computer combines CSI and audio per zone into a priority score.
 5. **Dashboard** visualize detections and rescue priorities. 
 
----
-
-## 🛠️ Tech Stack
+## Tech Stack
 
 | Layer | Technology |
 |--------|------------|
@@ -50,19 +40,8 @@ Phase is a network of microcontrollers that combines Wi-Fi sensing and audio ana
 
 ---
 
-## 📂 Project Structure
+## Project Structure
 
-```text
-Phase/
-├── firmware/
-│   ├── sender/
-│   ├── node/
-│   └── gateway/
-├── backend/
-├── frontend/
-├── docs/
-└── README.md
-```
 
 ---
 
@@ -112,8 +91,8 @@ npm run dev
 ---
 
 ## Roadmap
-- **Drone-deployed nodes** that are dropped into position to form the network automatically
-- **Mesh networking** so nodes relay data through each other, extending range and removing the single point of failure
+- Drone-deployed nodes that are dropped into position to form the network automatically
+- Mesh networking so nodes relay data through each other, extending range and removing the single point of failure
 - Ruggedized, battery-powered nodes lasting a full operational period
 
 ---
