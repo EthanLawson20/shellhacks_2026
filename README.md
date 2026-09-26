@@ -1,8 +1,8 @@
 <h1 align="center">Phase — See Beyond the Horizon</h1>
 
-<h3 align="left">
+<h4 align="left">
 Phase is a network of microcontrollers that combines Wi-Fi sensing and audio analysis to help rescuers identify possible signs of life.
-</h3>
+</h4>
 
 🏆 Built in 36 hours at ShellHacks 2026 (FIU, Miami)
 
