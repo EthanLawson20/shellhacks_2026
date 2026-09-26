@@ -1,26 +1,12 @@
 <h1 align="center">Phase — See Beyond the Horizon</h1>
 
 <p align="left">
-A low-cost ESP32 sensor network that combines WiFi Channel State Information (CSI) and on-device AI audio classification to help rescuers prioritize where to search first.
+Phase is a network of microcontrollers that combines Wi-Fi sensing and audio analysis to help rescuers identify possible signs of life.
 </p>
 
 🏆 Built in 36 hours at ShellHacks 2026 (FIU, Miami)
 
 </p>
-
----
-
-## What is Phase
-
-Several ESP32 sensing nodes are deployed around a collapsed structure or damaged building.
-
-Each node:
-
-1. Detects motion and barriers using WiFi CSI.
-2. ***Performs on-device audio classification to distinguish human sounds from environmental noise.***
-3. ***Sends only processed information to a central gateway. Raw audio never leaves the device.***
-
-***The fusion engine combines both sensing modalities to estimate the likelihood of human presence and continuously updates a live rescue dashboard.***
 
 ---
 
