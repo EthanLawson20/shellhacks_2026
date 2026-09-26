@@ -2,7 +2,6 @@
 # [TBD Project Name] — Finding Survivors Rescuers Can't See or Hear
 
 > A low-cost ESP32 sensing mesh that fuses **WiFi Channel State Information (CSI)** and **on-device audio classification** to detect people behind walls and under debris, and ranks where rescuers should search first.
-
 Built in 36 hours at **ShellHacks 2026** (FIU, Miami).
 ---
 
