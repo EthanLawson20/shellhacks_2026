@@ -11,19 +11,20 @@ if (stage && canvas) {
     renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.5));
     renderer.outputColorSpace = THREE.SRGBColorSpace;
     renderer.toneMapping = THREE.ACESFilmicToneMapping;
-    renderer.toneMappingExposure = 1.55;
+    renderer.toneMappingExposure = 1.2;
     renderer.shadowMap.enabled = true;
     renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 
     const scene = new THREE.Scene();
-    scene.fog = new THREE.Fog(0x10271f, 16, 30);
+    scene.fog = new THREE.Fog(0x070908, 18, 32);
 
     const camera = new THREE.PerspectiveCamera(32, 1, 0.1, 50);
     const homePosition = new THREE.Vector3(11.8, 9.4, 12.9);
+    const homeTarget = new THREE.Vector3(0, 1.1, 0);
     camera.position.copy(homePosition);
 
     const controls = new OrbitControls(camera, canvas);
-    controls.target.set(0, 1.1, 0);
+    controls.target.copy(homeTarget);
     controls.enableDamping = true;
     controls.dampingFactor = 0.07;
     controls.enablePan = false;
@@ -34,17 +35,17 @@ if (stage && canvas) {
 
     const material = (color, roughness = 0.8, metalness = 0) =>
       new THREE.MeshStandardMaterial({ color, roughness, metalness });
-    const stone = material(0x526c60, 0.96);
-    const floorTop = material(0x768b76, 0.96);
-    const wall = material(0x375c4f, 0.88);
-    const wallCap = material(0x9bbc9b, 0.74);
-    const furniture = material(0x223c32, 0.92);
-    const furnitureTop = material(0x8aa27f, 0.85);
-    const upholstery = material(0x587862, 0.96);
-    const cushion = material(0x9bb49a, 0.96);
-    const screen = new THREE.MeshBasicMaterial({ color: 0x285046, toneMapped: false });
-    const glass = new THREE.MeshStandardMaterial({ color: 0xa7cbb6, roughness: 0.24, transparent: true, opacity: 0.4 });
-    const lime = new THREE.Color(0xb8f46b);
+    const stone = material(0x1e2421, 0.96);
+    const floorTop = material(0x323a36, 0.96);
+    const wall = material(0x444e49, 0.9);
+    const wallCap = material(0x9aa49f, 0.8);
+    const furniture = material(0x151a18, 0.9);
+    const furnitureTop = material(0x58625d, 0.85);
+    const upholstery = material(0x3a433e, 0.96);
+    const cushion = material(0x59635e, 0.96);
+    const screen = new THREE.MeshBasicMaterial({ color: 0x0c1a12, toneMapped: false });
+    const glass = new THREE.MeshStandardMaterial({ color: 0x6f7a75, roughness: 0.24, transparent: true, opacity: 0.4 });
+    const lime = new THREE.Color(0x39ff88);
 
     function box(width, height, depth, x, y, z, surface, shadow = true) {
       const mesh = new THREE.Mesh(new THREE.BoxGeometry(width, height, depth), surface);
@@ -126,9 +127,9 @@ if (stage && canvas) {
     const furnitureGroup = groupSince(groupStart);
     const furniturePieces = furnitureGroup.children.map((mesh) => ({ mesh, y: mesh.position.y }));
 
-    const hemi = new THREE.HemisphereLight(0xdfffe0, 0x172b26, 2.25);
+    const hemi = new THREE.HemisphereLight(0xf2f2ee, 0x2a2e30, 2.1);
     scene.add(hemi);
-    const sun = new THREE.DirectionalLight(0xf2ffe9, 3.15);
+    const sun = new THREE.DirectionalLight(0xffffff, 2.9);
     sun.position.set(5, 9, 6);
     sun.castShadow = true;
     sun.shadow.mapSize.set(1024, 1024);
@@ -138,7 +139,7 @@ if (stage && canvas) {
     sun.shadow.camera.bottom = -11;
     sun.shadow.normalBias = 0.025;
     scene.add(sun);
-    const fill = new THREE.PointLight(0x86dba4, 15, 11, 2);
+    const fill = new THREE.PointLight(0x39ff88, 8, 11, 2);
     fill.position.set(-3, 4, -1);
     scene.add(fill);
 
@@ -148,11 +149,11 @@ if (stage && canvas) {
       new THREE.Vector3(-4.85, 0.55, 3.55),
       new THREE.Vector3(4.85, 0.55, 3.55)
     ];
-    const nodeBody = material(0x172d25, 0.43, 0.34);
-    const nodeMetal = material(0xa5c4a5, 0.32, 0.46);
+    const nodeBody = material(0x0b0e0c, 0.45, 0.3);
+    const nodeMetal = material(0xc4c7c2, 0.35, 0.45);
     const beacon = new THREE.MeshBasicMaterial({ color: lime, toneMapped: false });
 
-    function horizontalRing(radius, x, y, z, opacity, color = 0xb8f46b) {
+    function horizontalRing(radius, x, y, z, opacity, color = 0x39ff88) {
       const ring = new THREE.Mesh(
         new THREE.TorusGeometry(radius, 0.012, 6, 72),
         new THREE.MeshBasicMaterial({ color, transparent: true, opacity, depthWrite: false })
@@ -182,11 +183,11 @@ if (stage && canvas) {
 
     // Keep the original simple silhouette geometry for both figures.
     const greenFigureMaterial = new THREE.MeshStandardMaterial({
-      color: 0xc4f89b, emissive: 0x628d43, emissiveIntensity: 0.55,
+      color: 0xe8fff0, emissive: 0x1d8a4a, emissiveIntensity: 0.55,
       roughness: 0.5, transparent: true, opacity: 0.62, depthWrite: false
     });
     const blueFigureMaterial = new THREE.MeshStandardMaterial({
-      color: 0x9ad8ee, emissive: 0x3c829e, emissiveIntensity: 0.55,
+      color: 0xe8fff0, emissive: 0x1d8a4a, emissiveIntensity: 0.55,
       roughness: 0.5, transparent: true, opacity: 0.62, depthWrite: false
     });
     function makePresence(x, z, figureMaterial) {
@@ -209,8 +210,8 @@ if (stage && canvas) {
     }
 
     const people = [
-      { x: -1.2, z: 0.75, color: 0xb8f46b, figureMaterial: greenFigureMaterial },
-      { x: 2.2, z: 0.85, color: 0x78d3ff, figureMaterial: blueFigureMaterial }
+      { x: -1.2, z: 0.75, color: 0x39ff88, figureMaterial: greenFigureMaterial },
+      { x: 2.2, z: 0.85, color: 0x39ff88, figureMaterial: blueFigureMaterial }
     ];
     people.forEach((person) => {
       person.figure = makePresence(person.x, person.z, person.figureMaterial);
@@ -252,7 +253,7 @@ if (stage && canvas) {
     networkEdges.forEach(([a, b]) => {
       const points = [nodePositions[a], nodePositions[b]].map((point) => point.clone().add(new THREE.Vector3(0, 0.17, 0)));
       const geometry = new THREE.BufferGeometry().setFromPoints(points);
-      const line = new THREE.Line(geometry, new THREE.LineDashedMaterial({ color: 0x9bd980, transparent: true, opacity: 0.23, dashSize: 0.12, gapSize: 0.13 }));
+      const line = new THREE.Line(geometry, new THREE.LineDashedMaterial({ color: 0x9aa49f, transparent: true, opacity: 0.3, dashSize: 0.12, gapSize: 0.13 }));
       line.computeLineDistances();
       scene.add(line);
       networkLines.push(line);
@@ -260,7 +261,7 @@ if (stage && canvas) {
 
     const scanRing = new THREE.Mesh(
       new THREE.TorusGeometry(1, 0.018, 6, 96),
-      new THREE.MeshBasicMaterial({ color: 0xb8f46b, transparent: true, opacity: 0, depthWrite: false })
+      new THREE.MeshBasicMaterial({ color: 0x39ff88, transparent: true, opacity: 0, depthWrite: false })
     );
     scanRing.rotation.x = Math.PI / 2;
     scanRing.position.y = 0.065;
@@ -288,7 +289,7 @@ if (stage && canvas) {
         mesh.position.y = y - 0.22 * (1 - Math.min(1, amount));
       });
       nodeGroup.scale.y = Math.max(0.001, nodes);
-      networkLines.forEach((line) => { line.material.opacity = 0.23 * network; });
+      networkLines.forEach((line) => { line.material.opacity = 0.3 * network; });
 
       const pulse = reducedMotion ? 1 : 1 + Math.sin(time * 1.45) * 0.045;
       people.forEach((person, index) => {
@@ -326,14 +327,18 @@ if (stage && canvas) {
         if (nextFraming === 'portrait') {
           camera.fov = 48;
           homePosition.set(16, 11.9, 17.2);
+          homeTarget.set(0, -1.6, 0);
         } else if (nextFraming === 'compact') {
           camera.fov = 42;
           homePosition.set(12.3, 9.5, 13.3);
+          homeTarget.set(0, -0.6, 0);
         } else {
           camera.fov = 32;
           homePosition.set(11.8, 9.4, 12.9);
+          homeTarget.set(-0.8, 0.1, 0.8);
         }
-        camera.position.copy(homePosition);
+        camera.position.copy(homePosition).add(homeTarget);
+        controls.target.copy(homeTarget);
         controls.update();
         framing = nextFraming;
       }
@@ -347,8 +352,8 @@ if (stage && canvas) {
     resize();
 
     resetButton?.addEventListener('click', () => {
-      camera.position.copy(homePosition);
-      controls.target.set(0, 1.1, 0);
+      camera.position.copy(homePosition).add(homeTarget);
+      controls.target.copy(homeTarget);
       controls.update();
     });
 
