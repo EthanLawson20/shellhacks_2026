@@ -1,5 +1,3 @@
-# Phase — See Beyond the Horizon
-
 <p align="center">
   <img src="docs/banner.png" alt="Phase Banner" width="100%">
 </p>
