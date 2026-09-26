@@ -1,23 +1,12 @@
 <h1 align="center">Phase — See Beyond the Horizon</h1>
 
-<p align="center">
-A low-cost ESP32 sensor network that combines <strong>WiFi Channel State Information (CSI)</strong> and <strong>on-device AI audio classification</strong> to help rescuers prioritize where to search first.
+<p align="left">
+A low-cost ESP32 sensor network that combines WiFi Channel State Information (CSI) and on-device AI audio classification to help rescuers prioritize where to search first.
 </p>
 
-<p align="center">
-
-🏆 Built in 36 hours at <strong>ShellHacks 2026</strong> (FIU, Miami)
+🏆 Built in 36 hours at ShellHacks 2026 (FIU, Miami)
 
 </p>
-
----
-
-## 🎥 Demo
-
-> **Coming Soon**
->
-> Add a GIF or YouTube demo here.
-
 ---
 
 ## 🚀 At a Glance
