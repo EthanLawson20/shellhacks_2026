@@ -89,9 +89,23 @@
         </div>
       </section>
 
+      <section class="audio-model section-pad" id="audio-model" aria-labelledby="audio-model-title">
+        <div class="container">
+          <div class="audio-model-heading reveal">
+            <div class="section-kicker"><span class="index">03</span><span>ANOTHER SENSOR SIGNAL</span></div>
+            <div><h2 id="audio-model-title">Listening for a <span>possible scream.</span></h2><p>Microphones in the nodes can capture short audio samples. A machine learning model examines the sound pattern and estimates whether it resembles a human scream, giving responders another potential clue to investigate.</p></div>
+          </div>
+          <figure class="model-figure reveal">
+            <div class="model-figure-top"><span>NEURAL NETWORK / AUDIO CLASSIFICATION</span><span>CONCEPT ARCHITECTURE</span></div>
+            <div class="model-diagram-scroll"><img src="scream-model.svg" width="1260" height="460" alt="Connected neural network based on the supplied sketch: audio input, Conv1D with 16 channels, max pooling by 2, Conv1D with 32 channels, max pooling by 2, flattening, a dense layer of 64 ReLU units, and one sigmoid output for a possible scream." /></div>
+            <figcaption>Based on the supplied model sketch. The output is an estimate, not proof that a person is present; it needs testing in real environments and human verification.</figcaption>
+          </figure>
+        </div>
+      </section>
+
       <section class="demo section-pad" id="demo">
         <div class="container">
-          <div class="demo-heading reveal"><div><div class="section-kicker"><span class="index">03</span><span>EXPLORE THE CONCEPT</span></div><h2>A clearer sense<br />of <span>the space.</span></h2><p>Try an illustrative room scenario to see how a presence map could communicate a potential area of interest.</p></div><div class="simulation-label"><span></span> INTERACTIVE SIMULATION</div></div>
+          <div class="demo-heading reveal"><div><div class="section-kicker"><span class="index">04</span><span>EXPLORE THE CONCEPT</span></div><h2>A clearer sense<br />of <span>the space.</span></h2><p>Try an illustrative room scenario to see how a presence map could communicate a potential area of interest.</p></div><div class="simulation-label"><span></span> INTERACTIVE SIMULATION</div></div>
           <div class="demo-shell reveal">
             <div class="demo-toolbar"><div class="toolbar-title"><span class="toolbar-icon">⌗</span><div><strong>ROOM OVERVIEW</strong><small>Illustrative floor plan / not live sensor data</small></div></div><div class="toolbar-live"><span></span> CONCEPT VIEW</div></div>
             <div class="demo-content">
@@ -111,7 +125,7 @@
 
       <section class="applications section-pad" id="applications">
         <div class="container">
-          <div class="section-heading reveal"><div class="section-kicker"><span class="index">04</span><span>FUTURE DEPLOYMENT PATHS</span></div><div><h2>Two ways to reach<br /><span>the room.</span></h2><p>The same sensing idea has different tradeoffs depending on when and where nodes are placed. Both paths need field testing.</p></div></div>
+          <div class="section-heading reveal"><div class="section-kicker"><span class="index">05</span><span>FUTURE DEPLOYMENT PATHS</span></div><div><h2>Two ways to reach<br /><span>the room.</span></h2><p>The same sensing idea has different tradeoffs depending on when and where nodes are placed. Both paths need field testing.</p></div></div>
           <div class="application-grid">
             <article class="application-card application-first reveal">
               <div class="application-art building-art" aria-hidden="true"><span></span><span></span><span></span><span></span><i></i></div>
@@ -126,7 +140,7 @@
         </div>
       </section>
 
-      <section class="principles section-pad"><div class="container principles-grid"><div class="reveal"><div class="section-kicker"><span class="index">05</span><span>WHAT WE STILL NEED TO PROVE</span></div><h2>Evidence before<br /><span>assurance.</span></h2><p class="principles-intro">This is a hackathon prototype. A promising room visualization is only a starting point for a tool that could influence a real response.</p></div><div class="principle-list reveal"><div><span>01</span><h3>Localization in real rooms</h3><p>Measure how walls, furniture, interference, and multiple people affect position estimates.</p></div><div><span>02</span><h3>Coverage and false negatives</h3><p>Test node spacing and placement, especially when a weak reading might hide a person.</p></div><div><span>03</span><h3>Responsible presentation</h3><p>Show uncertainty clearly, avoid identifying people, and keep responders in control of decisions.</p></div></div></div></section>
+      <section class="principles section-pad"><div class="container principles-grid"><div class="reveal"><div class="section-kicker"><span class="index">06</span><span>WHAT WE STILL NEED TO PROVE</span></div><h2>Evidence before<br /><span>assurance.</span></h2><p class="principles-intro">This is a hackathon prototype. A promising room visualization is only a starting point for a tool that could influence a real response.</p></div><div class="principle-list reveal"><div><span>01</span><h3>Localization in real rooms</h3><p>Measure how walls, furniture, interference, and multiple people affect position estimates.</p></div><div><span>02</span><h3>Coverage and false negatives</h3><p>Test node spacing and placement, especially when a weak reading might hide a person.</p></div><div><span>03</span><h3>Responsible presentation</h3><p>Show uncertainty clearly, avoid identifying people, and keep responders in control of decisions.</p></div></div></div></section>
 
       <section class="closing section-pad"><div class="container closing-inner reveal"><div class="closing-orbit" aria-hidden="true"><span></span><span></span><span></span></div><span class="closing-kicker">THE NEXT SIGNAL IS A STARTING POINT</span><h2>Better awareness.<br /><em>Better response.</em></h2><p>We’re building [PROJECT NAME] at ShellHacks 2026. Follow the prototype as it takes shape.</p><a class="button button-light" href="https://github.com/EthanLawson20/shellhacks_2026" target="_blank" rel="noopener noreferrer">Explore the project on GitHub <span aria-hidden="true">↗</span></a></div></section>
     </main>

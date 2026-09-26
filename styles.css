@@ -109,6 +109,19 @@
 @media(max-width:600px){.scene-stage{height:314px}.scene-overlay{left:10px;top:10px;padding:7px 9px}.scene-overlay span{font-size:8px}.scene-overlay small{font-size:8px}.scene-controls{right:9px;bottom:9px}.scene-controls>span{display:none}.scene-controls button{font-size:9px;padding:7px 9px}}
 
 /* Full-screen first impression: the room is the hero, with the story below it. */
+.audio-model{background:radial-gradient(ellipse at 84% 10%,#183d2b,transparent 45%),#0b2119;color:#f5f6ee}
+.audio-model-heading{display:grid;grid-template-columns:1fr 2fr;gap:80px;align-items:start;margin-bottom:42px}
+.audio-model .section-kicker{color:var(--lime)}
+.audio-model h2{max-width:760px;margin:0 0 20px;font-size:clamp(44px,5vw,73px);line-height:1.09;letter-spacing:-.07em;font-weight:600}
+.audio-model h2 span{color:var(--lime)}
+.audio-model-heading p{max-width:750px;margin:0;color:#aec3b3;font-size:16px;line-height:1.8}
+.model-figure{margin:0;overflow:hidden;border:1px solid rgba(184,244,107,.23);border-radius:22px;background:#0b2119;box-shadow:0 30px 70px rgba(0,0,0,.18)}
+.model-figure-top{display:flex;justify-content:space-between;gap:20px;padding:18px 25px;border-bottom:1px solid rgba(184,244,107,.16);color:var(--lime);font-size:10px;font-weight:700;letter-spacing:.13em}
+.model-diagram-scroll{overflow-x:auto;scrollbar-color:#5c8c67 #102a20}
+.model-diagram-scroll img{display:block;width:100%;height:auto;min-width:900px}
+.model-figure figcaption{padding:18px 25px;border-top:1px solid rgba(184,244,107,.16);color:#a9bfb0;font-size:13px;line-height:1.6}
+@media(max-width:800px){.audio-model-heading{grid-template-columns:1fr;gap:25px}.model-diagram-scroll img{min-width:900px}}
+@media(max-width:600px){.audio-model h2{font-size:clamp(42px,12vw,60px)}.audio-model-heading p{font-size:15px}.model-figure-top{padding:15px 18px}.model-figure-top span:last-child{display:none}.model-figure figcaption{padding:16px 18px}}
 .hero-immersive{
   height:100vh;
   height:100svh;
@@ -207,3 +220,33 @@
   .hero-immersive .hero-bottom>span:first-child{display:none}
   .intro p{font-size:15px}
 }
+
+/* Shared edge colors make the numbered sections read as one scroll gradient. */
+.statement{background:linear-gradient(180deg,#0b1c18 0%,#163227 100%);color:#f5f6ee}
+.statement .section-kicker,.statement h2 span{color:var(--lime)}
+.statement p{color:#bdd1c0}
+.statement p.small-statement{color:#e0efda}
+.statement-divider{background:rgba(221,242,218,.24)}
+.how{background:linear-gradient(180deg,#163227 0%,#244735 100%);color:#f5f6ee}
+.how .section-kicker,.how .section-heading h2 span{color:var(--lime)}
+.how .section-heading p{color:#c4d9c8}
+.how .steps{gap:14px}
+.how .step-card{background:#eef3e8;border:1px solid rgba(221,235,212,.75);border-radius:20px;padding:30px;color:var(--ink)}
+.audio-model{background:linear-gradient(180deg,#244735 0%,#38664c 100%);color:#f5f6ee}
+.audio-model .section-kicker,.audio-model h2 span{color:var(--lime)}
+.audio-model-heading p{color:#d0e3d1}
+.demo{background:linear-gradient(180deg,#38664c 0%,#83ad8d 100%);color:#f5f6ee}
+.demo .section-kicker,.demo h2 span,.simulation-label{color:var(--lime)}
+.demo-heading p{color:#e1f0df}
+.simulation-label span{background:var(--lime);box-shadow:0 0 0 5px rgba(184,244,107,.14)}
+.demo-shell{color:#f5f6ee}
+.applications{background:linear-gradient(180deg,#83ad8d 0%,#c7ddc2 100%);color:var(--ink)}
+.applications .section-kicker{color:#153f2a}
+.applications .section-heading h2 span{color:#194c2f}
+.applications .section-heading p{color:#173e2c}
+.application-note{border-color:rgba(7,20,18,.25)}
+.application-note span,.application-note p{color:#102f22}
+.principles{background:linear-gradient(180deg,#c7ddc2 0%,#b8f46b 100%);color:var(--ink)}
+.principles .section-kicker,.principles h2 span,.principle-list span{color:#245735}
+.principles-intro,.principle-list p{color:#274b37}
+.principle-list>div{border-color:rgba(22,71,39,.25)}
