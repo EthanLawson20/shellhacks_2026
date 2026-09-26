@@ -75,3 +75,40 @@ The spatial demo uses a placeholder 4 m by 3 m room with six nodes and seven cro
 ```
 
 Each link in the feed includes `tx`, `rx`, `baseline_amplitude`, and `current_amplitude` arrays. Replace the placeholder room coordinates and simulated feed with calibrated measurements from the actual ESP Wi-Fi CSI links when the nodes are assembled. The map is a coarse RF disturbance estimate, not a literal image of a hand.
+## Website showcase
+
+A ShellHacks 2026 concept exploring human presence sensing with ESP32 nodes, a mesh network, and Wi-Fi channel state information (CSI). The website explains the idea and includes an interactive **simulation** of how a room overview might look. It does not display live device data.
+
+## View the website
+
+Install the dependencies once, then start the local development server:
+
+```sh
+npm install
+npm run dev
+```
+
+Open the local address printed by Vite. The hero uses Three.js and WebGL, so opening `index.html` directly as a file will not load the 3D scene. To create a production build, run `npm run build`; the output is in `dist/`.
+
+The hero loads the 3D scene immediately over a quiet background, then the room assembles in a short sequence; visitors who prefer reduced motion see the complete scene immediately. If WebGL is unavailable, a short message replaces the scene. The larger furnished room, two simplified standing people with green and blue presence areas, and soft node-to-person lines are illustrative. They are not live CSI, recovered body shapes, measured radio paths, or validated localization results.
+
+## Customize it
+
+- Replace every occurrence of `[PROJECT NAME]` in `index.html` and this README once the team chooses a name.
+- Update the GitHub URL in `index.html` if the project moves.
+- Keep the simulation language until actual sensor readings and validation support a live view.
+
+## Files
+
+- `index.html` — content and page structure
+- `styles.css` — layout, responsive design, and animation
+- `script.js` — mobile navigation, scenario controls, and scroll reveals
+- `scene.js` — interactive Three.js cutaway room and entrance animation
+- `favicon.svg` — site icon
+- `package.json` / `package-lock.json` — dependencies and reproducible build
+
+## Git quick start
+
+`git status` shows changed files and your current branch. `git diff` shows your edits. `git add <file>` chooses what goes into the next snapshot. `git commit -m "message"` saves that snapshot locally. `git pull --rebase` brings in teammates' commits before yours, and `git push` shares your commits with GitHub.
+
+Before working, run `git pull --rebase`. Before pushing, check `git status` and `git diff` so you know exactly what you are sharing.
