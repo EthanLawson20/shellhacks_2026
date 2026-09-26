@@ -10,31 +10,7 @@ A low-cost ESP32 sensor network that combines WiFi Channel State Information (CS
 
 ---
 
-## Project Overview
-
-- 📡 WiFi CSI motion detection
-- 🫁 Breathing-band sensing
-- 🔊 Edge AI audio classification
-- 🧠 Multi-sensor fusion
-- 🗺️ Live blueprint visualization
-- 📋 Ranked rescue priorities
-- 💰 Built with low-cost ESP32 hardware
-
----
-
-## The Challenge
-
-In disaster response, every second matters.
-
-Traditional listening devices cannot reliably distinguish survivors from environmental noise, and they cannot detect unconscious victims who are breathing but unable to call for help.
-
-Specialized breathing radars exist but are expensive and typically scan only one location at a time.
-
-Phase explores whether a network of inexpensive ESP32 devices can continuously monitor multiple zones simultaneously and provide rescuers with a prioritized search map.
-
----
-
-## Our Solution
+## What is Phase
 
 Several ESP32 sensing nodes are deployed around a collapsed structure or damaged building.
 
@@ -42,21 +18,9 @@ Each node:
 
 1. Detects motion and barriers using WiFi CSI.
 2. ***Performs on-device audio classification to distinguish human sounds from environmental noise.***
-3. Sends only processed information to a central gateway. Raw audio never leaves the device.
+3. ***Sends only processed information to a central gateway. Raw audio never leaves the device.***
 
-The fusion engine combines both sensing modalities to estimate the likelihood of human presence and continuously updates a live rescue dashboard.
-
----
-
-## Why Sensor Fusion Matters
-
-| Detection | Priority | Interpretation |
-|------------|----------|----------------|
-| CSI breathing + no human sound | **P1 – Critical** | Possible unconscious survivor |
-| CSI + voice/tapping | **P1 – High Confidence** | Responsive survivor |
-| CSI only or human sound only | **P2 – Probable** | Verify with another tool |
-| Single transient event | **P3 – Low** | Monitor |
-| No detection | No signal | Never interpreted as "clear" |
+***The fusion engine combines both sensing modalities to estimate the likelihood of human presence and continuously updates a live rescue dashboard.***
 
 ---
 
@@ -73,35 +37,17 @@ The fusion engine combines both sensing modalities to estimate the likelihood of
 
 ---
 
-## 🏗️ Network Architecture
+## Network Architecture
 
 <p align="center">
   <img src="docs/network_architecture.png" alt="Network Architecture">
 </p>
 
-The system follows a **star topology**.
-
-1. A sender ESP32 continuously transmits WiFi packets.
-2. Sensor nodes capture CSI and classify nearby sounds.
-3. A gateway receives summarized data.
-4. The fusion engine combines evidence.
-5. The dashboard visualizes detections and rescue priorities.
-
----
-
-## 🖥️ Dashboard
-
-<p align="center">
-  <img src="docs/dashboard.png" alt="Dashboard Screenshot">
-</p>
-
-The dashboard displays:
-
-- Live building blueprint
-- Node locations
-- Heat map
-- Rescue priority ranking
-- Sensor health
+1. **Sender** (connected to the computer) transmits packets continuously so nodes always have a signal to measure. A second sender can be added for more coverage.
+2. **Nodes** capture CSI per packet and compute motion and breathing features. The onboard mic runs a small classifier and sends only the label and confidence. Each node also reports its battery level.
+3. **Gateway** (connected to the computer) collects data from all nodes and passes it to the computer over [serial / USB — confirm].
+4. **Fusion engine** on the computer combines CSI and audio per zone into a priority score.
+5. **Dashboard** visualize detections and rescue priorities. 
 
 ---
 
@@ -127,14 +73,14 @@ Phase/
 │   ├── node/
 │   └── gateway/
 ├── backend/
-├── dashboard/
+├── frontend/
 ├── docs/
 └── README.md
 ```
 
 ---
 
-## 🚀 Getting Started
+## Getting Started
 
 ### Hardware
 
@@ -168,72 +114,25 @@ cd dashboard
 npm install
 npm run dev
 ```
-
 ---
 
-## ⚙️ Calibration
-
-1. Place all sensor nodes.
-2. Keep the monitored area empty for approximately 30 seconds.
-3. Record a baseline.
-4. Begin monitoring.
-
-Recalibrate whenever the environment changes.
-
----
-
-## ⚠️ Current Limitations
-
-- Zone-level detection rather than precise localization.
-- Performance decreases through dense concrete and metal.
-- Requires environmental calibration.
-- Continuous CSI sensing increases power consumption.
-- Multiple people within one zone may appear as a single detection.
-- Indoor prototype only; not yet validated on real disaster sites.
-
----
-
-## 🔒 Responsible Use
-
-Phase is designed with privacy and safety in mind.
-
-- Human operators always make final decisions.
-- No raw audio is transmitted.
-- Presence detection only—no identity recognition.
-- "No signal" never means "area cleared."
-- Intended for authorized emergency response.
-
----
-
-## 🌎 Potential Applications
+## Use Cases
 
 - Collapsed structure search and rescue
-- Firefighter situational awareness
-- Hurricane response
+- Barricade and hostage situations: know where people are in a room before entry
+- Firefighting: RF sensing works through smoke, where cameras can't see
 - Disaster recovery
-- Emergency building assessment
 
 ---
 
-## 🛣️ Roadmap
-
-- [ ] Mesh networking
-- [ ] Drone deployment
-- [ ] Rugged enclosure
-- [ ] Extended battery life
-- [ ] Secure communication
-- [ ] Field testing with rescue agencies
-- [ ] Multi-person tracking research
+## Roadmap
+- **Drone-deployed nodes** that are dropped into position to form the network automatically
+- **Mesh networking** so nodes relay data through each other, extending range and removing the single point of failure
+- Ruggedized, battery-powered nodes lasting a full operational period
 
 ---
 
-## 📚 References
+## References
 
 - https://github.com/espressif/esp-csi
-
----
-
-## 📄 License
-
-Choose your preferred open-source license (MIT recommended).
 
