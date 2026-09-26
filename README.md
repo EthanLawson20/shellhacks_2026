@@ -7,9 +7,10 @@ A low-cost ESP32 sensor network that combines WiFi Channel State Information (CS
 🏆 Built in 36 hours at ShellHacks 2026 (FIU, Miami)
 
 </p>
+
 ---
 
-## 🚀 At a Glance
+## Project Overview
 
 - 📡 WiFi CSI motion detection
 - 🫁 Breathing-band sensing
@@ -23,7 +24,7 @@ A low-cost ESP32 sensor network that combines WiFi Channel State Information (CS
 
 ## The Challenge
 
-In disaster response, every minute matters.
+In disaster response, every second matters.
 
 Traditional listening devices cannot reliably distinguish survivors from environmental noise, and they cannot detect unconscious victims who are breathing but unable to call for help.
 
@@ -39,14 +40,11 @@ Several ESP32 sensing nodes are deployed around a collapsed structure or damaged
 
 Each node:
 
-1. Detects motion and breathing using WiFi CSI.
-2. Performs on-device audio classification to distinguish human sounds from environmental noise.
+1. Detects motion and barriers using WiFi CSI.
+2. ***Performs on-device audio classification to distinguish human sounds from environmental noise.***
 3. Sends only processed information to a central gateway. Raw audio never leaves the device.
 
 The fusion engine combines both sensing modalities to estimate the likelihood of human presence and continuously updates a live rescue dashboard.
-
-> [!NOTE]
-> Phase is intended to **assist** search-and-rescue teams. It does **not** replace trained responders, rescue dogs, cameras, or specialized radar systems.
 
 ---
 
