@@ -1,5 +1,5 @@
 # shellhacks_2026
-# [Project Name] — Finding Survivors Rescuers Can't See or Hear
+# [TBD Project Name] — Finding Survivors Rescuers Can't See or Hear
 
 > A low-cost ESP32 sensing mesh that fuses **WiFi Channel State Information (CSI)** and **on-device audio classification** to detect people behind walls and under debris, and ranks where rescuers should search first.
 
