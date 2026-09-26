@@ -1,1 +1,77 @@
 # shellhacks_2026
+
+## Live ESP32 display from Railway
+
+The Python app polls a Railway HTTP GET endpoint and displays a stationary frequency spectrum. The frequency and amplitude axes stay fixed while the spectrum shape updates in place; the status indicator changes to `FEED INTERRUPTED` when a request fails. The selected sample channel is configured with `RAILWAY_SIGNAL_CHANNEL`, or defaults to the first numeric channel. Configure the service URL and route in PowerShell:
+
+```powershell
+$env:RAILWAY_API_URL = "https://your-service.up.railway.app"
+$env:RAILWAY_DATA_ENDPOINT = "/api/data"
+& '.\.venv\Scripts\python.exe' '.\shellhacks_2026\vizualizer.py'
+```
+
+Use your actual Railway URL and API route. The route should return JSON containing numeric fields, for example:
+
+```json
+{"timestamp": "2026-09-26T12:00:00Z", "ecg": 512, "temperature": 24.8}
+```
+
+Numeric arrays are also supported for batches, such as `{"ecg": [510, 512, 508]}`. The chart labels each numeric field as a separate channel. The poll interval defaults to 0.25 seconds and can be changed with `RAILWAY_POLL_INTERVAL`.
+
+The Railway backend needs to expose the ESP32 readings through that GET route. If the ESP32 sends data to Railway using POST, the GET route should return the latest reading or a batch of recent readings. This project also needs Matplotlib installed in its selected Python environment.
+
+## Run a local feed simulation
+
+To view the live chart without Railway or an ESP32, run the local JSON feed simulator:
+
+```powershell
+& '.\.venv\Scripts\python.exe' '.\shellhacks_2026\simulate_feed.py'
+```
+
+It serves a changing ECG-like sample batch on a temporary local HTTP endpoint and opens the same visualizer. The simulator adds a 60 Hz interference burst after four seconds and brief HTTP outages, visible as a distinct spectrum peak and a `FEED INTERRUPTED` status. Close the chart window to stop the simulator.
+
+The spectrum analyzes numeric samples; it does not identify Wi-Fi radio interference by itself. It currently assumes 512 samples per second and needs at least one second of uninterrupted samples to draw a spectrum. To diagnose RF link quality specifically, have the ESP32/backend also send RSSI and a packet sequence number or sample timestamp so actual packet loss can be distinguished from ordinary sensor changes.
+
+## Live CSI environmental-change heatmap
+
+The optional `csi_heatmap.py` view uses the existing Railway JSON client and leaves `vizualizer.py` and its spectrum processing unchanged. Since the repository has no ESP CSI firmware or real CSI endpoint yet, this view requires a backend route that returns amplitude values per CSI subcarrier. It displays **CSI Environmental Change**, not a person classification.
+
+Supported response shapes include one CSI vector:
+
+```json
+{"timestamp": 123456, "csi_amplitude": [0.82, 0.91, 1.04, 1.12]}
+```
+
+or a batch of vectors:
+
+```json
+{"samples": [{"csi_amplitude": [0.82, 0.91, 1.04]}, {"csi_amplitude": [0.80, 0.93, 1.02]}]}
+```
+
+Explicit complex components are also accepted as `{"csi": {"real": [...], "imag": [...]}}`; the client converts those to magnitude. Raw interleaved ESP-IDF byte buffers are intentionally not guessed or decoded because their layout depends on the ESP model and firmware. The subcarrier count must remain constant during a calibration/run.
+
+Set `RAILWAY_API_URL` and `RAILWAY_DATA_ENDPOINT` to the CSI-serving Railway route, make sure the monitored area is clear, then launch:
+
+```powershell
+$env:RAILWAY_API_URL = "https://your-service.up.railway.app"
+$env:RAILWAY_DATA_ENDPOINT = "/api/csi"
+& '.\.venv\Scripts\python.exe' '.\shellhacks_2026\csi_heatmap.py'
+```
+
+The first 40 CSI samples establish a per-subcarrier median baseline; keep the area clear until the UI says `BASELINE ESTABLISHED`. `Recalibrate` starts that process again. `Pause` freezes the display while feed processing continues. The horizontal dimension is recent CSI packets and the vertical dimension is the actual subcarrier index; this project has no node geometry in its real feed, so it does not claim to localize a disturbance in physical space.
+
+The baseline deviation for each subcarrier is the current amplitude's absolute difference from its calibrated median, less a noise allowance based on three scaled median absolute deviations and a 0.5% baseline-relative floor. The remaining relative change is divided by the configured deviation scale and clipped to 0-1. A subcarrier median filter and exponential moving average then reduce speckle and jitter. Color runs continuously from clear orange (`0`) through yellow, green, and teal to blue-grey (`1`, largest measured deviation). The score reports environmental change only; it does not infer that the cause is a person.
+
+Tuning variables: `CSI_BASELINE_SAMPLES` (40), `CSI_DEVIATION_SCALE` (0.35 relative change for full-scale color), `CSI_NOISE_SIGMA` (3.0), `CSI_RELATIVE_NOISE_FLOOR` (0.005), `CSI_SUBCARRIER_MEDIAN_WINDOW` (3, odd values only), `CSI_SMOOTHING_ALPHA` (0.4; lower is smoother), `CSI_HISTORY_SAMPLES` (160), and `CSI_CHANGE_THRESHOLD` (0.25 for the UI indicator). The color score itself remains continuous; the threshold only labels the current mean score.
+
+The existing generic `/api/data` and `simulate_feed.py` provide ECG-like numeric samples, not CSI. Pointing the CSI heatmap at that route will show a feed error until the backend returns one of the CSI shapes above. `simulate_spatial_feed.py` remains an explicitly synthetic spatial-map demo and is not used as evidence of real CSI localization.
+
+## Preview the spatial CSI map
+
+The spatial demo uses a placeholder 4 m by 3 m room with six nodes and seven crossing links. It serves simulated CSI JSON based on [spatial_csi_sample.json](spatial_csi_sample.json), moves a simulated hand through the room, and paints blue for the unchanged empty-room baseline and red where affected links overlap:
+
+```powershell
+& '.\.venv\Scripts\python.exe' '.\shellhacks_2026\simulate_spatial_feed.py'
+```
+
+Each link in the feed includes `tx`, `rx`, `baseline_amplitude`, and `current_amplitude` arrays. Replace the placeholder room coordinates and simulated feed with calibrated measurements from the actual ESP Wi-Fi CSI links when the nodes are assembled. The map is a coarse RF disturbance estimate, not a literal image of a hand.
