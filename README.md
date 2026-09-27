@@ -1,7 +1,7 @@
-<h1 align="center">Phase — See Beyond the Horizon</h1>
+<h1 align="center">PHASE — See Beyond the Horizon</h1>
 
 <h4 align="left">
-Phase is a network of microcontrollers that combines Wi-Fi sensing and audio analysis to help rescuers identify possible signs of life.
+PHASE is a network of microcontrollers that combines Wi-Fi sensing and audio analysis to help rescuers identify possible signs of life.
 </h4>
 
 Built in 36 hours at ShellHacks 2026 (FIU, Miami)
@@ -12,6 +12,8 @@ Built in 36 hours at ShellHacks 2026 (FIU, Miami)
 
 - CSI-based motion detection
 - On-device audio classification
+- Audio ML models
+- CSI ML models
 - Dynamic rescue priority list
 - Real-time dashboard
 
@@ -24,34 +26,15 @@ Built in 36 hours at ShellHacks 2026 (FIU, Miami)
 1. **Sender** (connected to the computer) transmits packets continuously so nodes always have a signal to measure. A second sender can be added for more coverage.
 2. **Nodes** capture CSI per packet and compute motion and breathing features. The onboard mic runs a small classifier and sends only the label and confidence. Each node also reports its battery level.
 3. **Gateway** (connected to the computer) collects data from all nodes and passes it to the computer over [serial / USB — confirm].
-4. **Fusion engine** on the computer combines CSI and audio per zone into a priority score.
-5. **Dashboard** visualize detections and rescue priorities. 
-
-## Tech Stack
-
-Hardware:
-Firmware:
-Backend:
-Frontend:
+4. **ML Models** trained on real data captured by our hardware.
+5. **Fusion engine** on the computer combines CSI and audio per zone into a priority score.
+6. **Dashboard** visualize detections and rescue priorities. 
 
 ## Project Structure
-...
-
-## Getting Started
-
-### Hardware
-
-- ESP32 Sender
-- ESP32 Gateway
-- Two or more ESP32 Sensor Nodes
-- USB cables or power banks
-- Laptop
-
-### Flash Firmware
-
-
-### Start Backend
-
+**Hardware**: sender, node, gateway
+**Backend**: Audio model, CSI model
+**sensor fusion**: priority engine
+**Frontend**:dashboard
 
 ## Use Cases
 
