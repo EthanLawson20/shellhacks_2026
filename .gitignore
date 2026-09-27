@@ -1,0 +1,29 @@
+# node / vite
+node_modules/
+dist/
+.vite/
+
+# python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+env/
+*.egg-info/
+.pytest_cache/
+
+# secrets / local env
+.env
+.env.*
+*.pem
+*.key
+
+# platformio / arduino build output (hardware/)
+.pio/
+.pioenvs/
+.piolibdeps/
+build/
+
+# os / editor
+.DS_Store
+Thumbs.db
