@@ -3,36 +3,34 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="theme-color" content="#071412" />
-    <meta name="description" content="[PROJECT NAME] explores room-scale presence sensing with an ESP32 mesh and Wi-Fi channel state information for time-critical response." />
-    <meta property="og:title" content="[PROJECT NAME] — See beyond the possible" />
-    <meta property="og:description" content="A hackathon prototype exploring Wi-Fi sensing for safer, more informed emergency response." />
+    <meta name="theme-color" content="#0b0d0c" />
+    <meta name="description" content="Phase brings Wi-Fi sensing and audio classification into a clearer room view for time-critical response." />
+    <meta property="og:title" content="Phase — See beyond the horizon" />
+    <meta property="og:description" content="Connected sensing for a clearer understanding of activity in a space." />
     <meta property="og:type" content="website" />
     <link rel="icon" type="image/svg+xml" href="favicon.svg" />
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    <link rel="preload" href="fonts/space-grotesk-variable.woff2" as="font" type="font/woff2" crossorigin />
     <link rel="stylesheet" href="styles.css" />
     <script type="module" src="script.js"></script>
-    <title>[PROJECT NAME] — See beyond the possible</title>
+    <title>Phase — See beyond the horizon</title>
   </head>
   <body>
     <a class="skip-link" href="#main">Skip to content</a>
     <header class="site-header" id="top">
       <div class="container nav-wrap">
-        <a class="brand" href="#top" aria-label="[PROJECT NAME] home">
+        <a class="brand" href="/" aria-label="Phase home">
           <svg class="brand-mark" viewBox="0 0 40 40" aria-hidden="true"><path d="M7 28 15 9 32 13 34 30 20 35 7 28 32 13M15 9 20 35M7 28 34 30"/><circle cx="7" cy="28" r="3"/><circle cx="15" cy="9" r="3"/><circle cx="32" cy="13" r="3"/><circle cx="34" cy="30" r="3"/><circle cx="20" cy="35" r="3"/></svg>
-          <span>[PROJECT NAME]</span>
+          <span>Phase</span>
         </a>
         <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="primary-nav" aria-label="Open navigation">
           <span></span><span></span><span></span>
         </button>
         <nav class="nav" id="primary-nav" aria-label="Primary navigation">
-          <a href="#how-it-works">How it works</a>
-          <a href="#demo">Explore the concept</a>
-          <a href="#applications">Applications</a>
-          <a href="#mission">Our mission</a>
-          <a class="nav-cta" href="https://github.com/EthanLawson20/shellhacks_2026" target="_blank" rel="noopener noreferrer">View on GitHub <span aria-hidden="true">↗</span></a>
+          <a href="#architecture">Network architecture</a>
+          <a href="#audio-intelligence">Audio intelligence</a>
+          <a href="#challenge">The challenge</a>
+          <a href="#deployment-paths">Deployment paths</a>
+          <a class="nav-cta" id="dashboard-link" href="/backend/static/dashboard.html">Recording dashboard <span aria-hidden="true">→</span></a>
         </nav>
       </div>
     </header>
@@ -40,110 +38,82 @@
     <main id="main">
       <section class="hero hero-immersive" aria-labelledby="hero-title">
         <div class="hero-glow" aria-hidden="true"></div>
-        <div class="hero-visual hero-visual-3d" aria-label="Interactive illustrative 3D room showing connected sensors and a possible presence area">
+        <div class="hero-visual hero-visual-3d" aria-label="Interactive 3D example of a star network with one sender, three sensing nodes, a central gateway, and two illustrative presence areas">
             <div class="scene-stage" id="scene-stage">
-              <canvas id="hero-canvas" class="hero-canvas" aria-label="Interactive 3D illustration of a larger room with four sensor nodes, two standing people, and soft signal lines connecting each node to both people"></canvas>
-              <p class="scene-unavailable" role="status">The interactive room preview is unavailable on this device.</p>
-              <div class="scene-overlay" aria-hidden="true"><span><i></i> TWO PRESENCE AREAS</span><small>Illustrative figures, not body tracking</small><div class="scene-legend"><span><b class="legend-dot green"></b> Area A</span><span><b class="legend-dot blue"></b> Area B</span></div></div>
-              <div class="scene-controls"><span>DRAG TO ORBIT</span><button type="button" id="reset-view" aria-label="Reset 3D view">↺ Reset view</button></div>
+              <canvas id="hero-canvas" class="hero-canvas" aria-label="Interactive 3D room showing one sender broadcasting to three nodes, each node reporting to a gateway connected to a display. Two figures mark illustrative presence areas and are not connected to the nodes."></canvas>
+              <p class="scene-unavailable" role="status">The interactive room view is unavailable on this device.</p>
+              <div class="scene-controls"><button type="button" id="reset-view" aria-label="Reset 3D view">↺ Reset view</button></div>
             </div>
         </div>
         <div class="container hero-copy reveal">
-          <div class="eyebrow"><span class="eyebrow-dot"></span> A NEW PERSPECTIVE ON PRESENCE</div>
-          <h1 id="hero-title">See beyond <em>the possible.</em></h1>
-          <p>Click and drag on the scene below to explore an illustrative room-scale sensing model.</p>
+          <h1 id="hero-title">See beyond the horizon with<em> Phase.</em></h1>
+          <p>Phase is a network of microcontrollers that combines Wi-Fi sensing and audio analysis to help rescuers identify possible signs of life. Explore the following interactive simulation to see how its network works.</p>
         </div>
-        <div class="hero-bottom container"><span>04 NODE EXAMPLE <span class="hero-bottom-separator">/</span> 02 MODELED PEOPLE <span class="hero-bottom-separator">/</span> INTERACTIVE 3D CONCEPT</span><span class="scroll-hint">SCROLL TO EXPLORE THE PROJECT <span aria-hidden="true">↓</span></span></div>
       </section>
 
-      <section class="intro section-pad">
-        <div class="container intro-grid">
-          <div class="section-kicker reveal"><span class="index">↗</span><span>THE IDEA</span></div>
-          <div class="reveal">
-            <h2>Another way to understand <span>the room.</span></h2>
-            <p>When every second counts, knowing where people might be can change the response. [PROJECT NAME] explores a mesh network of ESP32 devices that uses Wi-Fi signal changes to help reveal human presence inside a space.</p>
-            <div class="hero-actions">
-              <a class="button button-primary" href="#demo">Explore the concept <span aria-hidden="true">↗</span></a>
-              <a class="button button-ghost" href="#how-it-works">How it works <span aria-hidden="true">↓</span></a>
-            </div>
-            <div class="hero-note"><span class="note-line"></span><span>A ShellHacks 2026 prototype · Research in progress</span></div>
+      <section class="architecture-section section-pad" id="architecture" aria-labelledby="architecture-title">
+        <div class="container architecture-grid">
+          <div class="architecture-visual reveal">
+            <div class="architecture-kicker" id="architecture-title"><span>02</span> NETWORK ARCHITECTURE</div>
+            <figure class="architecture-figure">
+              <img src="network-architecture.png" width="980" height="696" alt="Star network diagram: one sender broadcasts to three receiving nodes. Each node reports to a central gateway, which connects to a display." />
+            </figure>
+          </div>
+          <div class="deployment-panel reveal">
+            <h2 id="deployment-guide-title">How to deploy</h2>
+            <ol class="deployment-steps">
+              <li><span class="deployment-number">1</span><div><h3>Place the network</h3><p>Position one sender and three receiving nodes around the area. The nodes report their observations to a central gateway.</p><strong>1 sender, 3 receivers, 1 gateway</strong></div></li>
+              <li><span class="deployment-number">2</span><div><h3>Sense and listen</h3><p>Each node observes changes in the sender's Wi-Fi signal through channel state information (CSI). Node microphones provide audio samples for a model designed to flag possible human screams.</p><strong>Wi-Fi CSI + audio classification</strong></div></li>
+              <li><span class="deployment-number">3</span><div><h3>Review the room view</h3><p>The gateway brings the observations together for a display of possible areas of activity that responders can assess and verify on site.</p><strong>Estimated activity, human verification</strong></div></li>
+            </ol>
           </div>
         </div>
       </section>
 
-      <section class="statement section-pad" id="mission">
-        <div class="container statement-grid">
-          <div class="section-kicker reveal"><span class="index">01</span><span>THE CHALLENGE</span></div>
-          <div class="reveal"><h2>What if a building could help tell us <span>where to look?</span></h2><p>Smoke, debris, darkness, and unfamiliar layouts can make it difficult for responders to locate people quickly. We are exploring a new layer of situational awareness from signals already capable of moving through a room.</p><div class="statement-divider"></div><p class="small-statement">A clue for responders. A path toward faster decisions. A technology being tested with care.</p></div>
-        </div>
-      </section>
-
-      <section class="how section-pad" id="how-it-works">
+      <section class="audio-intelligence section-pad" id="audio-intelligence" aria-labelledby="audio-intelligence-title">
         <div class="container">
-          <div class="section-heading reveal"><div class="section-kicker"><span class="index">02</span><span>THE APPROACH</span></div><div><h2>Small devices.<br /><span>A bigger picture.</span></h2><p>Wi-Fi signals change as they travel through a space. By studying those changes across multiple points, our prototype aims to estimate where human presence may be.</p></div></div>
-          <div class="steps">
-            <article class="step-card reveal"><div class="step-top"><span>01 / CONNECT</span><div class="step-icon network-icon" aria-hidden="true"><svg viewBox="0 0 58 58"><path d="M9 40 20 13 45 19 48 42 29 49 9 40 45 19M20 13 29 49M9 40 48 42"/><circle cx="9" cy="40" r="3"/><circle cx="20" cy="13" r="3"/><circle cx="45" cy="19" r="3"/><circle cx="48" cy="42" r="3"/><circle cx="29" cy="49" r="3"/></svg></div></div><h3>Build the mesh</h3><p>ESP32 nodes form a distributed network around an area, sharing observations from different positions.</p><span class="step-foot">MULTIPLE VANTAGE POINTS <span aria-hidden="true">↗</span></span></article>
-            <article class="step-card reveal"><div class="step-top"><span>02 / SENSE</span><div class="step-icon wave-icon" aria-hidden="true"><i></i><i></i><i></i></div></div><h3>Read signal changes</h3><p>Channel state information, or CSI, describes how a Wi-Fi signal changes between devices. Movement and people can affect that pattern.</p><span class="step-foot">WI-FI CHANNEL STATE INFORMATION <span aria-hidden="true">↗</span></span></article>
-            <article class="step-card reveal"><div class="step-top"><span>03 / INTERPRET</span><div class="step-icon target-icon" aria-hidden="true"><i></i><i></i><i></i></div></div><h3>Surface a useful clue</h3><p>Software combines readings into an estimated presence map that a responder could use alongside other information.</p><span class="step-foot">ESTIMATED, NOT CERTAIN <span aria-hidden="true">↗</span></span></article>
-          </div>
-        </div>
-      </section>
-
-      <section class="audio-model section-pad" id="audio-model" aria-labelledby="audio-model-title">
-        <div class="container">
-          <div class="audio-model-heading reveal">
-            <div class="section-kicker"><span class="index">03</span><span>ANOTHER SENSOR SIGNAL</span></div>
-            <div><h2 id="audio-model-title">Listening for a <span>possible scream.</span></h2><p>Microphones in the nodes can capture short audio samples. A machine learning model examines the sound pattern and estimates whether it resembles a human scream, giving responders another potential clue to investigate.</p></div>
+          <div class="audio-intelligence-heading reveal">
+            <div class="section-kicker"><span class="index">03</span><span>AUDIO INTELLIGENCE</span></div>
+            <div><h2 id="audio-intelligence-title">Recognizing sounds that <span>may need attention.</span></h2><p>Node microphones provide another source of information. A neural network is designed to analyze short audio samples and score patterns associated with human screams, adding an audio signal for responders to evaluate.</p></div>
           </div>
           <figure class="model-figure reveal">
-            <div class="model-figure-top"><span>NEURAL NETWORK / AUDIO CLASSIFICATION</span><span>CONCEPT ARCHITECTURE</span></div>
-            <div class="model-diagram-scroll"><img src="scream-model.svg" width="1260" height="460" alt="Connected neural network based on the supplied sketch: audio input, Conv1D with 16 channels, max pooling by 2, Conv1D with 32 channels, max pooling by 2, flattening, a dense layer of 64 ReLU units, and one sigmoid output for a possible scream." /></div>
-            <figcaption>Based on the supplied model sketch. The output is an estimate, not proof that a person is present; it needs testing in real environments and human verification.</figcaption>
+            <div class="model-figure-top"><span>NEURAL NETWORK / AUDIO CLASSIFICATION</span><span>MODEL ARCHITECTURE</span></div>
+            <div class="model-diagram-scroll"><img src="scream-model.svg" width="1260" height="460" alt="Connected neural network: audio input, Conv1D with 16 channels, max pooling by 2, Conv1D with 32 channels, max pooling by 2, flattening, a dense layer of 64 ReLU units, and one sigmoid output for a possible scream." /></div>
+            <figcaption>An audio score indicates a possible scream. It does not establish a person's location or replace on-site verification.</figcaption>
           </figure>
         </div>
       </section>
 
-      <section class="demo section-pad" id="demo">
+      <section class="challenge section-pad" id="challenge" aria-labelledby="challenge-title">
         <div class="container">
-          <div class="demo-heading reveal"><div><div class="section-kicker"><span class="index">04</span><span>EXPLORE THE CONCEPT</span></div><h2>A clearer sense<br />of <span>the space.</span></h2><p>Try an illustrative room scenario to see how a presence map could communicate a potential area of interest.</p></div><div class="simulation-label"><span></span> INTERACTIVE SIMULATION</div></div>
-          <div class="demo-shell reveal">
-            <div class="demo-toolbar"><div class="toolbar-title"><span class="toolbar-icon">⌗</span><div><strong>ROOM OVERVIEW</strong><small>Illustrative floor plan / not live sensor data</small></div></div><div class="toolbar-live"><span></span> CONCEPT VIEW</div></div>
-            <div class="demo-content">
-              <div class="demo-map" id="demo-map" data-scenario="one" role="img" aria-label="Simulated room map showing one possible presence near the center right">
-                <span class="room-label room-a">ENTRY</span><span class="room-label room-b">ZONE A</span><span class="room-label room-c">ZONE B</span><span class="room-label room-d">ZONE C</span>
-                <div class="room-boundary"><span class="demo-wall dw1"></span><span class="demo-wall dw2"></span><span class="demo-wall dw3"></span><span class="demo-wall dw4"></span></div>
-                <svg class="demo-connections" viewBox="0 0 760 450" preserveAspectRatio="none" aria-hidden="true"><path d="M116 84 L646 83 L647 368 L116 368 Z M116 84 L647 368 M646 83 L116 368" /></svg>
-                <div class="demo-node dn1"><span></span><b>N1</b></div><div class="demo-node dn2"><span></span><b>N2</b></div><div class="demo-node dn3"><span></span><b>N3</b></div><div class="demo-node dn4"><span></span><b>N4</b></div>
-                <div class="heat heat-one"><span></span></div><div class="heat heat-two"><span></span></div>
-                <span class="map-scale">0 ───── 5m</span><span class="map-north">N ↑</span>
-              </div>
-              <div class="demo-panel"><div class="panel-block"><span class="panel-label">SCENARIO</span><h3>What might the system see?</h3><p>Choose a scene to explore how detected signal activity might appear to a response team.</p><div class="scenario-buttons" role="group" aria-label="Choose a simulated room scenario"><button class="scenario active" type="button" data-scenario="one" aria-pressed="true"><span>01</span> One person</button><button class="scenario" type="button" data-scenario="two" aria-pressed="false"><span>02</span> Two people</button><button class="scenario" type="button" data-scenario="clear" aria-pressed="false"><span>03</span> No clear signal</button></div></div><div class="panel-result" aria-live="polite"><span class="panel-label">SIMULATED OBSERVATION</span><div class="result-number" id="result-number">01 <small>area of interest</small></div><p id="result-copy">A signal pattern suggests possible presence in Zone B. Responders would verify on site.</p></div><div class="panel-disclaimer"><span aria-hidden="true">ⓘ</span> This visualization is conceptual. Real performance depends on placement, environment, calibration, and testing.</div></div>
-            </div>
+          <div class="challenge-heading reveal">
+            <div class="section-kicker"><span class="index">04</span><span>THE CHALLENGE</span></div>
+            <h2 id="challenge-title">In a rescue, every second spent searching the wrong spot can <span>cost a life.</span></h2>
+          </div>
+          <div class="challenge-grid">
+            <article class="challenge-item reveal"><span class="challenge-number">01</span><h3>Sees through smoke and debris</h3><p>Our star network is designed to detect movement and breathing where cameras go blind, even when survivors cannot call for help.</p></article>
+            <article class="challenge-item reveal"><span class="challenge-number">02</span><h3>Scans the whole scene at once</h3><p>Instead of one radar checking one spot at a time, the receiving nodes monitor their zones simultaneously and report to a central gateway.</p></article>
+            <article class="challenge-item reveal"><span class="challenge-number">03</span><h3>Low cost, deployed in minutes</h3><p>Built from low-cost nodes, the system is designed for rapid placement and calibration, giving responders a live view of where to search first.</p></article>
           </div>
         </div>
       </section>
 
-      <section class="applications section-pad" id="applications">
+      <section class="deployment-paths section-pad" id="deployment-paths" aria-labelledby="deployment-paths-title">
         <div class="container">
-          <div class="section-heading reveal"><div class="section-kicker"><span class="index">05</span><span>FUTURE DEPLOYMENT PATHS</span></div><div><h2>Two ways to reach<br /><span>the room.</span></h2><p>The same sensing idea has different tradeoffs depending on when and where nodes are placed. Both paths need field testing.</p></div></div>
-          <div class="application-grid">
-            <article class="application-card application-first reveal">
-              <div class="application-art building-art" aria-hidden="true"><span></span><span></span><span></span><span></span><i></i></div>
-              <div class="application-content"><span class="card-tag">01 / PRE-INSTALLED</span><h3>Prepared buildings</h3><p>Fixed nodes could provide known coverage and repeatable placement in buildings equipped ahead of an incident.</p><div class="application-detail"><span>WHEN</span><strong>Before an emergency</strong></div><div class="application-detail"><span>TRADEOFF</span><strong>Requires installation and upkeep</strong></div></div>
+          <h2 class="deployment-paths-label reveal" id="deployment-paths-title"><span aria-hidden="true"></span>Future deployment paths</h2>
+          <div class="deployment-path-grid">
+            <article class="deployment-path-card deployment-path-first reveal">
+              <div class="deployment-path-art building-art" aria-hidden="true"><span></span><span></span><span></span><span></span><i></i></div>
+              <div class="deployment-path-content"><span class="card-tag">Pre-installed</span><h3>Prepared buildings</h3><p>Fixed nodes could provide known coverage and repeatable placement in buildings equipped ahead of an incident.</p><div class="deployment-path-detail"><span>When</span><strong>Before an emergency</strong></div><div class="deployment-path-detail"><span>Tradeoff</span><strong>Requires installation and upkeep</strong></div></div>
             </article>
-            <article class="application-card application-portable reveal">
-              <div class="application-art drone-art" aria-hidden="true"><div class="drone-body"><span></span></div><i class="rotor rotor-left"></i><i class="rotor rotor-right"></i><b></b></div>
-              <div class="application-content"><span class="card-tag">02 / DEPLOYED ON SCENE</span><h3>Portable placement</h3><p>Responders might position temporary nodes, potentially with drones, when a building has no installed system.</p><div class="application-detail"><span>WHEN</span><strong>During a response</strong></div><div class="application-detail"><span>TRADEOFF</span><strong>Coverage depends on placement</strong></div></div>
+            <article class="deployment-path-card deployment-path-portable reveal">
+              <div class="deployment-path-art drone-art" aria-hidden="true"><div class="drone-body"><span></span></div><i class="rotor rotor-left"></i><i class="rotor rotor-right"></i><b></b></div>
+              <div class="deployment-path-content"><span class="card-tag">Deployed on scene</span><h3>Portable placement</h3><p>Responders might position temporary nodes, potentially with drones, when a building has no installed system.</p><div class="deployment-path-detail"><span>When</span><strong>During a response</strong></div><div class="deployment-path-detail"><span>Tradeoff</span><strong>Coverage depends on placement</strong></div></div>
             </article>
           </div>
-          <div class="application-note reveal"><span>BUILT AROUND A HUMAN DECISION</span><p>Any future system should support responders with evidence, uncertainty, and context. It should never replace a physical search or safety procedure.</p></div>
         </div>
       </section>
-
-      <section class="principles section-pad"><div class="container principles-grid"><div class="reveal"><div class="section-kicker"><span class="index">06</span><span>WHAT WE STILL NEED TO PROVE</span></div><h2>Evidence before<br /><span>assurance.</span></h2><p class="principles-intro">This is a hackathon prototype. A promising room visualization is only a starting point for a tool that could influence a real response.</p></div><div class="principle-list reveal"><div><span>01</span><h3>Localization in real rooms</h3><p>Measure how walls, furniture, interference, and multiple people affect position estimates.</p></div><div><span>02</span><h3>Coverage and false negatives</h3><p>Test node spacing and placement, especially when a weak reading might hide a person.</p></div><div><span>03</span><h3>Responsible presentation</h3><p>Show uncertainty clearly, avoid identifying people, and keep responders in control of decisions.</p></div></div></div></section>
-
-      <section class="closing section-pad"><div class="container closing-inner reveal"><div class="closing-orbit" aria-hidden="true"><span></span><span></span><span></span></div><span class="closing-kicker">THE NEXT SIGNAL IS A STARTING POINT</span><h2>Better awareness.<br /><em>Better response.</em></h2><p>We’re building [PROJECT NAME] at ShellHacks 2026. Follow the prototype as it takes shape.</p><a class="button button-light" href="https://github.com/EthanLawson20/shellhacks_2026" target="_blank" rel="noopener noreferrer">Explore the project on GitHub <span aria-hidden="true">↗</span></a></div></section>
     </main>
-    <footer class="site-footer"><div class="container footer-inner"><a class="brand" href="#top"><svg class="brand-mark" viewBox="0 0 40 40" aria-hidden="true"><path d="M7 28 15 9 32 13 34 30 20 35 7 28 32 13M15 9 20 35M7 28 34 30"/><circle cx="7" cy="28" r="3"/><circle cx="15" cy="9" r="3"/><circle cx="32" cy="13" r="3"/><circle cx="34" cy="30" r="3"/><circle cx="20" cy="35" r="3"/></svg><span>[PROJECT NAME]</span></a><p>Created with &#9825; by Ethan, Jacob, Brayden, and Selena.</p><div><span>ShellHacks 2026</span><a href="#top">Back to top ↑</a></div></div></footer>
+    <footer class="site-footer"><div class="container footer-inner"><a class="brand" href="#top"><svg class="brand-mark" viewBox="0 0 40 40" aria-hidden="true"><path d="M7 28 15 9 32 13 34 30 20 35 7 28 32 13M15 9 20 35M7 28 34 30"/><circle cx="7" cy="28" r="3"/><circle cx="15" cy="9" r="3"/><circle cx="32" cy="13" r="3"/><circle cx="34" cy="30" r="3"/><circle cx="20" cy="35" r="3"/></svg><span>Phase</span></a><p>Built with &#9825; by Ethan, Jacob, Brayden, and Selena.</p><div><span>ShellHacks 2026</span><a href="#top">Back to top ↑</a></div></div></footer>
   </body>
 </html>

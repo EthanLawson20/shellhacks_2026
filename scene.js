@@ -16,7 +16,7 @@ if (stage && canvas) {
     renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 
     const scene = new THREE.Scene();
-    scene.fog = new THREE.Fog(0x10271f, 16, 30);
+    scene.fog = new THREE.Fog(0x0b0d0c, 16, 30);
 
     const camera = new THREE.PerspectiveCamera(32, 1, 0.1, 50);
     const homePosition = new THREE.Vector3(11.8, 9.4, 12.9);
@@ -34,16 +34,16 @@ if (stage && canvas) {
 
     const material = (color, roughness = 0.8, metalness = 0) =>
       new THREE.MeshStandardMaterial({ color, roughness, metalness });
-    const stone = material(0x526c60, 0.96);
-    const floorTop = material(0x768b76, 0.96);
-    const wall = material(0x375c4f, 0.88);
-    const wallCap = material(0x9bbc9b, 0.74);
-    const furniture = material(0x223c32, 0.92);
-    const furnitureTop = material(0x8aa27f, 0.85);
-    const upholstery = material(0x587862, 0.96);
-    const cushion = material(0x9bb49a, 0.96);
-    const screen = new THREE.MeshBasicMaterial({ color: 0x285046, toneMapped: false });
-    const glass = new THREE.MeshStandardMaterial({ color: 0xa7cbb6, roughness: 0.24, transparent: true, opacity: 0.4 });
+    const stone = material(0x303431, 0.96);
+    const floorTop = material(0x454a46, 0.96);
+    const wall = material(0x242824, 0.88);
+    const wallCap = material(0x777c77, 0.74);
+    const furniture = material(0x171b18, 0.92);
+    const furnitureTop = material(0x424742, 0.85);
+    const upholstery = material(0x323732, 0.96);
+    const cushion = material(0x777d77, 0.96);
+    const screen = new THREE.MeshBasicMaterial({ color: 0x1b1f1d, toneMapped: false });
+    const glass = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.24, transparent: true, opacity: 0.4 });
     const lime = new THREE.Color(0xb8f46b);
 
     function box(width, height, depth, x, y, z, surface, shadow = true) {
@@ -126,9 +126,9 @@ if (stage && canvas) {
     const furnitureGroup = groupSince(groupStart);
     const furniturePieces = furnitureGroup.children.map((mesh) => ({ mesh, y: mesh.position.y }));
 
-    const hemi = new THREE.HemisphereLight(0xdfffe0, 0x172b26, 2.25);
+    const hemi = new THREE.HemisphereLight(0xffffff, 0x1b1f1d, 2.25);
     scene.add(hemi);
-    const sun = new THREE.DirectionalLight(0xf2ffe9, 3.15);
+    const sun = new THREE.DirectionalLight(0xffffff, 3.15);
     sun.position.set(5, 9, 6);
     sun.castShadow = true;
     sun.shadow.mapSize.set(1024, 1024);
@@ -138,18 +138,21 @@ if (stage && canvas) {
     sun.shadow.camera.bottom = -11;
     sun.shadow.normalBias = 0.025;
     scene.add(sun);
-    const fill = new THREE.PointLight(0x86dba4, 15, 11, 2);
+    const fill = new THREE.PointLight(0xb8f46b, 15, 11, 2);
     fill.position.set(-3, 4, -1);
     scene.add(fill);
 
+    // One sender broadcasts to three receivers. Each receiver reports to the gateway.
+    const senderPosition = new THREE.Vector3(0, 2.15, -3.95);
     const nodePositions = [
-      new THREE.Vector3(-4.85, 0.55, -3.55),
-      new THREE.Vector3(4.85, 0.55, -3.55),
-      new THREE.Vector3(-4.85, 0.55, 3.55),
-      new THREE.Vector3(4.85, 0.55, 3.55)
+      new THREE.Vector3(-4.55, 0.55, 1.0),
+      new THREE.Vector3(0, 0.55, -1.65),
+      new THREE.Vector3(4.45, 0.55, 1.0)
     ];
-    const nodeBody = material(0x172d25, 0.43, 0.34);
-    const nodeMetal = material(0xa5c4a5, 0.32, 0.46);
+    const gatewayPosition = new THREE.Vector3(0, 0.7, 3.35);
+    const displayPosition = new THREE.Vector3(3.75, 0.57, 3.5);
+    const nodeBody = material(0x1b1f1d, 0.43, 0.34);
+    const nodeMetal = material(0x8d938d, 0.32, 0.46);
     const beacon = new THREE.MeshBasicMaterial({ color: lime, toneMapped: false });
 
     function horizontalRing(radius, x, y, z, opacity, color = 0xb8f46b) {
@@ -163,8 +166,37 @@ if (stage && canvas) {
       return ring;
     }
 
+    function deviceLabel(label, color, x, y, z) {
+      const labelCanvas = document.createElement('canvas');
+      labelCanvas.width = 256;
+      labelCanvas.height = 64;
+      const context = labelCanvas.getContext('2d');
+      context.fillStyle = 'rgba(11, 13, 12, 0.88)';
+      context.fillRect(0, 0, 256, 64);
+      context.strokeStyle = color;
+      context.lineWidth = 3;
+      context.strokeRect(2, 2, 252, 60);
+      context.fillStyle = color;
+      context.font = 'bold 27px Arial';
+      context.textAlign = 'center';
+      context.textBaseline = 'middle';
+      context.fillText(label, 128, 33);
+      const texture = new THREE.CanvasTexture(labelCanvas);
+      texture.colorSpace = THREE.SRGBColorSpace;
+      const sprite = new THREE.Sprite(new THREE.SpriteMaterial({ map: texture, transparent: true, depthTest: false }));
+      sprite.position.set(x, y, z);
+      sprite.scale.set(1.55, 0.39, 1);
+      scene.add(sprite);
+    }
+
     groupStart = scene.children.length;
-    nodePositions.forEach((position) => {
+    box(0.82, 0.28, 0.28, senderPosition.x, senderPosition.y, senderPosition.z, nodeBody);
+    box(0.5, 0.08, 0.3, senderPosition.x, senderPosition.y + 0.19, senderPosition.z, nodeMetal);
+    const senderBeacon = new THREE.Mesh(new THREE.SphereGeometry(0.075, 16, 12), new THREE.MeshBasicMaterial({ color: 0xffffff, toneMapped: false }));
+    senderBeacon.position.copy(senderPosition).add(new THREE.Vector3(0, 0.25, 0));
+    scene.add(senderBeacon);
+    deviceLabel('SENDER', '#ffffff', senderPosition.x, senderPosition.y + 0.7, senderPosition.z);
+    nodePositions.forEach((position, index) => {
       const base = new THREE.Mesh(new THREE.CylinderGeometry(0.09, 0.12, 0.5, 12), nodeMetal);
       base.position.set(position.x, 0.25, position.z);
       base.castShadow = true;
@@ -177,16 +209,31 @@ if (stage && canvas) {
       light.position.set(position.x, 0.64, position.z);
       scene.add(light);
       horizontalRing(0.32, position.x, 0.035, position.z, 0.56);
+      deviceLabel(`NODE ${index + 1}`, '#b8f46b', position.x, 1.35, position.z);
     });
+    box(0.46, 0.55, 0.4, gatewayPosition.x, 0.28, gatewayPosition.z, nodeBody);
+    box(0.29, 0.32, 0.025, gatewayPosition.x, 0.36, gatewayPosition.z + 0.215, screen, false);
+    const gatewayAntenna = new THREE.Mesh(new THREE.CylinderGeometry(0.014, 0.014, 0.4, 8), nodeMetal);
+    gatewayAntenna.position.set(gatewayPosition.x, 0.76, gatewayPosition.z);
+    scene.add(gatewayAntenna);
+    const gatewayBeacon = new THREE.Mesh(new THREE.SphereGeometry(0.065, 16, 12), beacon);
+    gatewayBeacon.position.set(gatewayPosition.x, 0.98, gatewayPosition.z);
+    scene.add(gatewayBeacon);
+    horizontalRing(0.42, gatewayPosition.x, 0.035, gatewayPosition.z, 0.65);
+    deviceLabel('GATEWAY', '#b8f46b', gatewayPosition.x, 1.45, gatewayPosition.z);
+    box(0.85, 0.055, 0.58, displayPosition.x, 0.19, displayPosition.z + 0.19, nodeMetal);
+    box(0.86, 0.55, 0.055, displayPosition.x, 0.5, displayPosition.z - 0.08, nodeBody);
+    box(0.7, 0.4, 0.02, displayPosition.x, 0.51, displayPosition.z - 0.04, screen, false);
+    deviceLabel('DISPLAY', '#ffffff', displayPosition.x, 1.12, displayPosition.z);
     const nodeGroup = groupSince(groupStart);
 
     // Keep the original simple silhouette geometry for both figures.
     const greenFigureMaterial = new THREE.MeshStandardMaterial({
-      color: 0xc4f89b, emissive: 0x628d43, emissiveIntensity: 0.55,
+      color: 0xb8f46b, emissive: 0xb8f46b, emissiveIntensity: 0.35,
       roughness: 0.5, transparent: true, opacity: 0.62, depthWrite: false
     });
-    const blueFigureMaterial = new THREE.MeshStandardMaterial({
-      color: 0x9ad8ee, emissive: 0x3c829e, emissiveIntensity: 0.55,
+    const whiteFigureMaterial = new THREE.MeshStandardMaterial({
+      color: 0xffffff, emissive: 0xffffff, emissiveIntensity: 0.25,
       roughness: 0.5, transparent: true, opacity: 0.62, depthWrite: false
     });
     function makePresence(x, z, figureMaterial) {
@@ -210,7 +257,7 @@ if (stage && canvas) {
 
     const people = [
       { x: -1.2, z: 0.75, color: 0xb8f46b, figureMaterial: greenFigureMaterial },
-      { x: 2.2, z: 0.85, color: 0x78d3ff, figureMaterial: blueFigureMaterial }
+      { x: 2.2, z: 0.85, color: 0xffffff, figureMaterial: whiteFigureMaterial }
     ];
     people.forEach((person) => {
       person.figure = makePresence(person.x, person.z, person.figureMaterial);
@@ -229,34 +276,34 @@ if (stage && canvas) {
       }
     });
 
-    // The first model's soft curved lines, repeated from every node to both figures.
-    people.forEach((person) => {
-      person.signalMaterial = new THREE.MeshBasicMaterial({ color: person.color, transparent: true, opacity: 0.24, depthWrite: false });
-      person.packetMaterial = new THREE.MeshBasicMaterial({ color: person.color, toneMapped: false });
-    });
-    const curves = nodePositions.flatMap((position) => people.map((person) => {
-      const target = new THREE.Vector3(person.x, 1.2, person.z);
+    function flow(from, to, color, opacity, lift) {
       const curve = new THREE.CatmullRomCurve3([
-        position.clone().add(new THREE.Vector3(0, 0.2, 0)),
-        position.clone().lerp(target, 0.5).add(new THREE.Vector3(0, 0.36, 0)),
-        target
+        from.clone(),
+        from.clone().lerp(to, 0.5).add(new THREE.Vector3(0, lift, 0)),
+        to.clone()
       ]);
-      scene.add(new THREE.Mesh(new THREE.TubeGeometry(curve, 36, 0.009, 5, false), person.signalMaterial));
-      const packet = new THREE.Mesh(new THREE.SphereGeometry(0.045, 10, 8), person.packetMaterial);
+      const lineMaterial = new THREE.MeshBasicMaterial({ color, transparent: true, opacity: 0, depthWrite: false });
+      scene.add(new THREE.Mesh(new THREE.TubeGeometry(curve, 36, 0.014, 6, false), lineMaterial));
+      const packet = new THREE.Mesh(
+        new THREE.SphereGeometry(0.055, 10, 8),
+        new THREE.MeshBasicMaterial({ color, toneMapped: false })
+      );
       scene.add(packet);
-      return { curve, packet };
-    }));
+      return { curve, lineMaterial, packet, opacity };
+    }
 
-    const networkEdges = [[0, 1], [1, 3], [3, 2], [2, 0], [0, 3], [1, 2]];
-    const networkLines = [];
-    networkEdges.forEach(([a, b]) => {
-      const points = [nodePositions[a], nodePositions[b]].map((point) => point.clone().add(new THREE.Vector3(0, 0.17, 0)));
-      const geometry = new THREE.BufferGeometry().setFromPoints(points);
-      const line = new THREE.Line(geometry, new THREE.LineDashedMaterial({ color: 0x9bd980, transparent: true, opacity: 0.23, dashSize: 0.12, gapSize: 0.13 }));
-      line.computeLineDistances();
-      scene.add(line);
-      networkLines.push(line);
-    });
+    const broadcastFlows = nodePositions.map((position) =>
+      flow(senderPosition, position.clone().add(new THREE.Vector3(0, 0.22, 0)), 0xffffff, 0.55, 0.55)
+    );
+    const reportFlows = nodePositions.map((position) =>
+      flow(position.clone().add(new THREE.Vector3(0, 0.22, 0)), gatewayPosition, 0xb8f46b, 0.55, 0.45)
+    );
+    const displayLine = new THREE.Line(
+      new THREE.BufferGeometry().setFromPoints([gatewayPosition, displayPosition]),
+      new THREE.LineDashedMaterial({ color: 0xffffff, transparent: true, opacity: 0, dashSize: 0.14, gapSize: 0.1 })
+    );
+    displayLine.computeLineDistances();
+    scene.add(displayLine);
 
     const scanRing = new THREE.Mesh(
       new THREE.TorusGeometry(1, 0.018, 6, 96),
@@ -288,7 +335,8 @@ if (stage && canvas) {
         mesh.position.y = y - 0.22 * (1 - Math.min(1, amount));
       });
       nodeGroup.scale.y = Math.max(0.001, nodes);
-      networkLines.forEach((line) => { line.material.opacity = 0.23 * network; });
+      [...broadcastFlows, ...reportFlows].forEach(({ lineMaterial, opacity }) => { lineMaterial.opacity = opacity * network; });
+      displayLine.material.opacity = 0.65 * network;
 
       const pulse = reducedMotion ? 1 : 1 + Math.sin(time * 1.45) * 0.045;
       people.forEach((person, index) => {
@@ -297,10 +345,13 @@ if (stage && canvas) {
         person.figure.scale.setScalar(Math.max(0.001, appearance));
         person.volume.material.opacity = (reducedMotion ? 0.075 : 0.075 + Math.sin(time * 1.3 + index * 1.4) * 0.018) * field;
         person.rings.forEach((ring, ringIndex) => ring.scale.setScalar(Math.max(0.001, field * (pulse + ringIndex * 0.025))));
-        person.signalMaterial.opacity = 0.24 * signals;
       });
-      curves.forEach(({ curve, packet }, index) => {
-        packet.position.copy(curve.getPoint(reducedMotion ? index * 0.11 + 0.12 : (time * 0.18 + index * 0.12) % 1));
+      broadcastFlows.forEach(({ curve, packet }, index) => {
+        packet.position.copy(curve.getPoint(reducedMotion ? 0.75 : (time * 0.19 + index * 0.23) % 1));
+        packet.scale.setScalar(Math.max(0.001, signals));
+      });
+      reportFlows.forEach(({ curve, packet }, index) => {
+        packet.position.copy(curve.getPoint(reducedMotion ? 0.75 : (time * 0.16 + index * 0.28) % 1));
         packet.scale.setScalar(Math.max(0.001, signals));
       });
 

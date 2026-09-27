@@ -5,10 +5,13 @@ import json
 import os
 from contextlib import asynccontextmanager
 from datetime import datetime, timezone
+from pathlib import Path
 from typing import Any, Optional
 
 from fastapi import FastAPI, HTTPException, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import RedirectResponse
+from fastapi.staticfiles import StaticFiles
 
 import db
 
@@ -63,6 +66,12 @@ async def lifespan(app: FastAPI):
 
 
 app = FastAPI(title="PHASE backend", lifespan=lifespan)
+app.mount("/static", StaticFiles(directory=Path(__file__).parent / "static"), name="static")
+
+
+@app.get("/dashboard", include_in_schema=False)
+async def dashboard():
+    return RedirectResponse(url="/static/dashboard.html")
 
 app.add_middleware(
     CORSMiddleware,

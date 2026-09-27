@@ -77,7 +77,7 @@ The spatial demo uses a placeholder 4 m by 3 m room with six nodes and seven cro
 Each link in the feed includes `tx`, `rx`, `baseline_amplitude`, and `current_amplitude` arrays. Replace the placeholder room coordinates and simulated feed with calibrated measurements from the actual ESP Wi-Fi CSI links when the nodes are assembled. The map is a coarse RF disturbance estimate, not a literal image of a hand.
 ## Website showcase
 
-A ShellHacks 2026 concept exploring human presence sensing with ESP32 nodes, a mesh network, and Wi-Fi channel state information (CSI). The website explains the idea and includes an interactive **simulation** of how a room overview might look. It does not display live device data.
+A ShellHacks 2026 concept exploring human presence sensing with Wi-Fi channel state information (CSI). The website depicts a star network: one sender broadcasts to three ESP32 sensing nodes, which report to a central gateway connected to a display. It includes an interactive 3D illustration and a network architecture diagram; neither displays live device data.
 
 ## View the website
 
@@ -90,19 +90,20 @@ npm run dev
 
 Open the local address printed by Vite. The hero uses Three.js and WebGL, so opening `index.html` directly as a file will not load the 3D scene. To create a production build, run `npm run build`; the output is in `dist/`.
 
-The hero loads the 3D scene immediately over a quiet background, then the room assembles in a short sequence; visitors who prefer reduced motion see the complete scene immediately. If WebGL is unavailable, a short message replaces the scene. The larger furnished room, two simplified standing people with green and blue presence areas, and soft node-to-person lines are illustrative. They are not live CSI, recovered body shapes, measured radio paths, or validated localization results.
+The hero loads the 3D scene immediately over a quiet background, then the room assembles in a short sequence; visitors who prefer reduced motion see the complete scene immediately. If WebGL is unavailable, a short message replaces the scene. The furnished room depicts one sender, three sensing nodes, one gateway, a display, and two simplified standing people with green and blue presence areas. The links illustrate the star topology, not live CSI, measured radio paths, recovered body shapes, or validated localization results.
 
 ## Customize it
 
 - Replace every occurrence of `[PROJECT NAME]` in `index.html` and this README once the team chooses a name.
 - Update the GitHub URL in `index.html` if the project moves.
-- Keep the simulation language until actual sensor readings and validation support a live view.
+- Keep the 3D illustration and architecture diagram labeled as examples until actual sensor readings and validation support a live view.
 
 ## Files
 
 - `index.html` — content and page structure
 - `styles.css` — layout, responsive design, and animation
-- `script.js` — mobile navigation, scenario controls, and scroll reveals
+- `script.js` — mobile navigation and scroll reveals
+- `network-architecture.png` — supplied star-network diagram used in section 04
 - `scene.js` — interactive Three.js cutaway room and entrance animation
 - `favicon.svg` — site icon
 - `package.json` / `package-lock.json` — dependencies and reproducible build

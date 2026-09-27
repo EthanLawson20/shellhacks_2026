@@ -22,47 +22,6 @@ navigation?.querySelectorAll('a').forEach((link) => link.addEventListener('click
   navigation.classList.remove('open');
 }));
 
-const scenarios = {
-  one: {
-    count: '01',
-    label: 'area of interest',
-    copy: 'A signal pattern suggests possible presence in Zone B. Responders would verify on site.',
-    description: 'Simulated room map showing one possible presence near the center right'
-  },
-  two: {
-    count: '02',
-    label: 'areas of interest',
-    copy: 'Separate signal patterns suggest possible presence in Zones A and C. Both areas would need verification.',
-    description: 'Simulated room map showing two possible presence areas in Zones A and C'
-  },
-  clear: {
-    count: '00',
-    label: 'distinct patterns',
-    copy: 'No distinct presence pattern appears in this scenario. An unclear reading does not confirm that a room is empty.',
-    description: 'Simulated room map with no distinct presence pattern'
-  }
-};
-
-const demoMap = document.getElementById('demo-map');
-const resultNumber = document.getElementById('result-number');
-const resultCopy = document.getElementById('result-copy');
-
-document.querySelectorAll('.scenario').forEach((button) => {
-  button.addEventListener('click', () => {
-    const scenario = scenarios[button.dataset.scenario];
-    if (!scenario) return;
-    document.querySelectorAll('.scenario').forEach((option) => {
-      const selected = option === button;
-      option.classList.toggle('active', selected);
-      option.setAttribute('aria-pressed', String(selected));
-    });
-    demoMap.dataset.scenario = button.dataset.scenario;
-    demoMap.setAttribute('aria-label', scenario.description);
-    resultNumber.innerHTML = `${scenario.count} <small>${scenario.label}</small>`;
-    resultCopy.textContent = scenario.copy;
-  });
-});
-
 const revealElements = document.querySelectorAll('.reveal');
 if ('IntersectionObserver' in window && !window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
   const observer = new IntersectionObserver((entries) => {
