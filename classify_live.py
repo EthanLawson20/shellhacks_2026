@@ -44,7 +44,7 @@ _classes = None
 
 
 def _ensure_loaded():
-    """Load and cache the model, scaler, and class order. Raises on missing files."""
+    # Load and cache the model, scaler, and class order. Raises on missing files.
     global _model, _scaler, _classes
     if _model is None:
         import joblib
@@ -99,7 +99,7 @@ def _update_buffer(buffer: deque, zone: dict) -> None:
 
 def _format_zone_line(zone: dict, buffer: deque, window: int,
                       threshold: float, classes) -> str:
-    """Build the one-line status for a single zone."""
+    # Build the one-line status for a single zone.
     zone_id = zone.get("zone")
     name = zone.get("name") or f"Zone {zone_id}"
     firmware = str(zone.get("state", "?"))

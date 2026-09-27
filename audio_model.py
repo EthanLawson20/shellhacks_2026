@@ -1,3 +1,5 @@
+import argparse
+import json
 import warnings
 import wave
 from pathlib import Path
@@ -7,6 +9,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
 from sklearn.metrics import confusion_matrix
+from sklearn.model_selection import GroupShuffleSplit
 from tensorflow.keras.callbacks import EarlyStopping, ModelCheckpoint
 import tensorflow as tf
 
@@ -22,6 +25,39 @@ TARGET_FRAMES = (
 	TARGET_SAMPLE_RATE * TARGET_DURATION_SECONDS + STFT_FRAME_STEP - 1
 ) // STFT_FRAME_STEP
 FOLDER_LABELS = {"notscreaming": 0, "screaming": 1}
+TARGET_SAMPLES = TARGET_SAMPLE_RATE * TARGET_DURATION_SECONDS
+DB_WINDOW_READINGS = 20
+DB_CONTEXT_READINGS = 8
+
+
+def waveform_to_spectrogram(mono_audio: np.ndarray) -> np.ndarray:
+	# Keep WAV training and live microphone inference on the same dBFS transform.
+	window = tf.signal.hann_window(STFT_FRAME_LENGTH, periodic=True)
+	complex_spectrogram = tf.signal.stft(
+		tf.convert_to_tensor(mono_audio, dtype=tf.float32),
+		frame_length=STFT_FRAME_LENGTH,
+		frame_step=STFT_FRAME_STEP,
+		fft_length=STFT_FRAME_LENGTH,
+		window_fn=tf.signal.hann_window,
+		pad_end=True,
+	)
+	magnitude = tf.abs(complex_spectrogram)
+	single_sided_scale = tf.concat(
+		[
+			tf.ones((1,), dtype=magnitude.dtype),
+			tf.fill((STFT_FREQUENCY_BINS - 2,), 2.0),
+			tf.ones((1,), dtype=magnitude.dtype),
+		],
+		axis=0,
+	)
+	amplitude = magnitude * single_sided_scale / tf.reduce_sum(window)
+	spectrogram_db = 20.0 * tf.math.log(
+		tf.maximum(amplitude, 10.0 ** (SPECTROGRAM_DB_FLOOR / 20.0))
+	) / tf.math.log(10.0)
+	spectrogram = np.asarray(spectrogram_db.numpy(), dtype=np.float32)
+	if not np.isfinite(spectrogram).all():
+		raise ValueError("Audio contains non-finite values")
+	return spectrogram
 
 def decode_wav_file(path: str | Path) -> tuple[np.ndarray, int]:
 	# Read PCM WAV data, mix its channels, and convert to a single-sided dBFS spectrogram.
@@ -54,33 +90,10 @@ def decode_wav_file(path: str | Path) -> tuple[np.ndarray, int]:
 		raise ValueError(f"Unsupported PCM sample width ({sample_width} bytes): {path}")
 
 	mono_audio = np.mean(audio.reshape(-1, channel_count), axis=1, dtype=np.float32)
-	window = tf.signal.hann_window(STFT_FRAME_LENGTH, periodic=True)
-	complex_spectrogram = tf.signal.stft(
-		tf.convert_to_tensor(mono_audio),
-		frame_length=STFT_FRAME_LENGTH,
-		frame_step=STFT_FRAME_STEP,
-		fft_length=STFT_FRAME_LENGTH,
-		window_fn=tf.signal.hann_window,
-		pad_end=True,
-	)
-	magnitude = tf.abs(complex_spectrogram)
-	single_sided_scale = tf.concat(
-		[
-			tf.ones((1,), dtype=magnitude.dtype),
-			tf.fill((STFT_FREQUENCY_BINS - 2,), 2.0),
-			tf.ones((1,), dtype=magnitude.dtype),
-		],
-		axis=0,
-	)
-	amplitude = magnitude * single_sided_scale / tf.reduce_sum(window)
-	spectrogram_db = 20.0 * tf.math.log(
-		tf.maximum(amplitude, 10.0 ** (SPECTROGRAM_DB_FLOOR / 20.0))
-	) / tf.math.log(10.0)
-	spectrogram = np.asarray(spectrogram_db.numpy(), dtype=np.float32)
-	if not np.isfinite(spectrogram).all():
-		raise ValueError(f"Audio file contains non-finite values: {path}")
-
-	return spectrogram, int(sample_rate)
+	try:
+		return waveform_to_spectrogram(mono_audio), int(sample_rate)
+	except ValueError as error:
+		raise ValueError(f"Audio file contains invalid samples: {path}") from error
 
 
 def iter_decoded_wavs(
@@ -104,7 +117,7 @@ def iter_decoded_wavs(
 # a global max pooling layer, and dense layers for classification. 
 # The model is compiled with the Adam optimizer and binary cross-entropy loss function, 
 # suitable for binary classification tasks.
-def build_model(input_shape, learning_rate=0.0005):
+def build_model(input_shape, learning_rate=0.001):
 	model = tf.keras.Sequential(
 		[
 			tf.keras.layers.Input(shape=input_shape),
@@ -140,6 +153,160 @@ def preprocess_spectrogram(spectrogram, target_frames):
 	else:
 		spectrogram = spectrogram[:target_frames]
 	return spectrogram[..., np.newaxis].astype(np.float32, copy=False)
+
+
+def preprocess_db_readings(
+	readings: list,
+	threshold: float = 90.0,
+	window_readings: int = DB_WINDOW_READINGS,
+	context_readings: int = DB_CONTEXT_READINGS,
+) -> np.ndarray:
+	if context_readings < 2 or window_readings < context_readings:
+		raise ValueError("window_readings must be >= context_readings >= 2")
+	audio_db = np.asarray(
+		[float(reading["audio_db"]) for reading in readings
+		 if reading.get("audio_db") is not None],
+		dtype=np.float32,
+	)
+	if audio_db.size < window_readings:
+		raise ValueError(
+			f"Expected at least {window_readings} audio_db readings, got {audio_db.size}"
+		)
+	audio_db = audio_db[-window_readings:]
+	if not np.isfinite(audio_db).all():
+		raise ValueError("audio_db readings must be finite numbers")
+	# Each row represents an overlapping local time patch; this gives the
+	# existing 2D CNN temporal structure without fabricating frequency content.
+	patches = np.lib.stride_tricks.sliding_window_view(audio_db, context_readings)
+	patches = np.clip((patches - threshold) / 20.0, -2.0, 2.0)
+	return patches[..., np.newaxis].astype(np.float32, copy=False)
+
+
+def prepare_db_dataset(
+	dataset_path: str | Path,
+	threshold: float = 90.0,
+	min_loud_fraction: float = 0.2,
+	window_readings: int = DB_WINDOW_READINGS,
+	context_readings: int = DB_CONTEXT_READINGS,
+) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
+	if not 0.0 <= min_loud_fraction <= 1.0:
+		raise ValueError("min_loud_fraction must be between 0 and 1")
+	with Path(dataset_path).open(encoding="utf-8") as dataset_file:
+		windows = json.load(dataset_file).get("windows", [])
+	features = []
+	labels = []
+	groups = []
+	for window in windows:
+		readings = [
+			reading for reading in window.get("readings", [])
+			if reading.get("audio_db") is not None
+		]
+		if len(readings) < window_readings:
+			continue
+		selected = readings[-window_readings:]
+		values = np.asarray([float(reading["audio_db"]) for reading in selected])
+		features.append(preprocess_db_readings(
+			selected, threshold, window_readings, context_readings
+		))
+		labels.append(int(np.mean(values >= threshold) >= min_loud_fraction))
+		groups.append(window.get("session_id"))
+	if not features:
+		raise ValueError(f"No windows with {window_readings} audio_db readings in {dataset_path}")
+	return np.stack(features), np.asarray(labels, dtype=np.int32), np.asarray(groups)
+
+
+def train_db_model(
+	dataset_path: str | Path,
+	output_path: str | Path,
+	threshold: float = 90.0,
+	min_loud_fraction: float = 0.2,
+	window_readings: int = DB_WINDOW_READINGS,
+	context_readings: int = DB_CONTEXT_READINGS,
+	epochs: int = 30,
+) -> None:
+	features, labels, groups = prepare_db_dataset(
+		dataset_path, threshold, min_loud_fraction, window_readings, context_readings
+	)
+	counts = np.bincount(labels, minlength=2)
+	if np.any(counts == 0):
+		raise ValueError("Threshold settings must produce both loud and not-loud windows")
+	if len(np.unique(groups)) < 2:
+		raise ValueError("At least two separate sessions are needed for validation")
+	train_indices, val_indices = next(GroupShuffleSplit(
+		n_splits=1, test_size=0.25, random_state=42
+	).split(features, labels, groups))
+	if len(np.unique(labels[train_indices])) < 2 or len(np.unique(labels[val_indices])) < 2:
+		raise ValueError(
+			"Session-grouped split needs both classes in train and validation; "
+			"try another threshold or collect more sessions"
+		)
+	train_counts = np.bincount(labels[train_indices], minlength=2)
+	class_weights = {
+		label: len(train_indices) / (2 * count)
+		for label, count in enumerate(train_counts)
+	}
+	model = build_model(input_shape=features.shape[1:])
+	output_path = Path(output_path)
+	callbacks = [
+		EarlyStopping(
+			monitor="val_auc", mode="max", min_delta=0.001,
+			patience=5, restore_best_weights=True,
+		),
+		ModelCheckpoint(
+			str(output_path), save_best_only=True, save_weights_only=False,
+			monitor="val_auc", mode="max",
+		),
+	]
+	model.fit(
+		features[train_indices], labels[train_indices],
+		validation_data=(features[val_indices], labels[val_indices]),
+		class_weight=class_weights, epochs=epochs, batch_size=32,
+		callbacks=callbacks, verbose=1,
+	)
+	model.save(output_path)
+	predictions = model.predict(features[val_indices], verbose=0).reshape(-1)
+	confusion = confusion_matrix(labels[val_indices], predictions >= 0.5, labels=[0, 1])
+	true_negative, false_positive, false_negative, true_positive = confusion.ravel()
+	precision = true_positive / (true_positive + false_positive) if true_positive + false_positive else 0.0
+	recall = true_positive / (true_positive + false_negative) if true_positive + false_negative else 0.0
+	f1 = 2 * precision * recall / (precision + recall) if precision + recall else 0.0
+	accuracy = (true_positive + true_negative) / confusion.sum()
+	print("Session-held-out validation diagnostics (pseudo-labels):")
+	print(f"  windows: {confusion.sum()}")
+	print(f"  accuracy: {accuracy:.4f}")
+	print(f"  precision (loud): {precision:.4f}")
+	print(f"  recall (loud): {recall:.4f}")
+	print(f"  F1 (loud): {f1:.4f}")
+	print("Session-held-out validation confusion matrix (rows=true, columns=predicted):")
+	print(confusion)
+	plt.figure(figsize=(6, 5))
+	sns.heatmap(
+		confusion,
+		annot=True,
+		fmt="d",
+		cmap="Blues",
+		cbar=False,
+		xticklabels=["Not loud", "Loud"],
+		yticklabels=["Not loud", "Loud"],
+	)
+	plt.xlabel("Predicted label")
+	plt.ylabel("Actual label")
+	plt.title("ESP dB validation confusion matrix")
+	plt.tight_layout()
+	plt.show()
+	metadata_path = output_path.with_name(f"{output_path.stem}_meta.json")
+	metadata_path.write_text(json.dumps({
+		"input": "audio_db temporal patches",
+		"threshold_db": threshold,
+		"min_loud_fraction": min_loud_fraction,
+		"window_readings": window_readings,
+		"context_readings": context_readings,
+		"normalization_db": 20.0,
+		"labels": ["not_loud", "loud"],
+	}, indent=2) + "\n", encoding="utf-8")
+	print(f"Saved model: {output_path}")
+	print(f"Saved preprocessing metadata: {metadata_path}")
+	print(f"Pseudo-label counts: not_loud={counts[0]}, loud={counts[1]}")
 
 
 class SpectrogramSequence(tf.keras.utils.Sequence):
@@ -268,12 +435,12 @@ def train_model(model, train_data, val_data, epochs=15):
 		verbose=1,
 		callbacks=[early_stopping, checkpoint]
 	)
-	model.save("audio_classification_model.keras")
+	model.save("audio_model.keras")
 	return history
 
 def train_from_checkpoint(train_data, val_data, model, fine_tune_layers, epochs: int = 5, keep_pos_emb: bool = True):
 
-	for layer in model:
+	for layer in model.layers:
 		layer.trainable = False
 
 	for i in range(fine_tune_layers):
@@ -372,20 +539,51 @@ def print_model_diagnostics(model, validation_data, threshold=0.5) -> None:
 
 
 def main() -> None:
-	train_data, val_data = prepare_dataset(dataset_dir)
-	print(f"Training clips: {len(train_data.examples)}")
-	print(f"Validation clips: {len(val_data.examples)}")
-	for folder_name, class_label in FOLDER_LABELS.items():
-		print(
-			f"{folder_name}: "
-			f"train={sum(label == class_label for _, label in train_data.examples)}, "
-			f"validation={sum(label == class_label for _, label in val_data.examples)}"
-		)
-	model = build_model(input_shape=(TARGET_FRAMES, STFT_FREQUENCY_BINS, 1))
-	model.summary()
-	train_from_checkpoint(train_data, val_data, model, 3, 3)
-	#train_model(model, train_data, val_data, epochs=10)
-	print_model_diagnostics(model, val_data)
+	parser = argparse.ArgumentParser(description="Train the audio CNN.")
+	parser.add_argument(
+		"--format", choices=("wav", "esp-db"), default="esp-db",
+		help="training data format (default: esp-db)",
+	)
+	parser.add_argument("--data", default="dataset.json",
+					help="ESP dataset JSON path when --format esp-db")
+	parser.add_argument("--output", default="audio_model.keras",
+					help="output model path for --format esp-db")
+	parser.add_argument("--threshold-db", type=float, default=90.0,
+					help="provisional loudness threshold for ESP pseudo-labels")
+	parser.add_argument("--min-loud-fraction", type=float, default=0.2,
+					help="fraction of readings above threshold to label a window loud")
+	parser.add_argument("--window-readings", type=int, default=DB_WINDOW_READINGS,
+					help="readings per ESP window")
+	parser.add_argument("--context-readings", type=int, default=DB_CONTEXT_READINGS,
+					help="readings per temporal patch for ESP CNN input")
+	parser.add_argument("--epochs", type=int, default=30,
+					help="maximum number of training epochs")
+	args = parser.parse_args()
+	if args.format == "wav":
+		train_data, val_data = prepare_dataset(dataset_dir)
+		print(f"Training clips: {len(train_data.examples)}")
+		print(f"Validation clips: {len(val_data.examples)}")
+		for folder_name, class_label in FOLDER_LABELS.items():
+			print(
+				f"{folder_name}: "
+				f"train={sum(label == class_label for _, label in train_data.examples)}, "
+				f"validation={sum(label == class_label for _, label in val_data.examples)}"
+			)
+		model = build_model(input_shape=(TARGET_FRAMES, STFT_FREQUENCY_BINS, 1))
+		model.summary()
+		train_model(model, train_data, val_data, epochs=args.epochs)
+		print_model_diagnostics(model, val_data)
+		return
+
+	train_db_model(
+		args.data,
+		args.output,
+		threshold=args.threshold_db,
+		min_loud_fraction=args.min_loud_fraction,
+		window_readings=args.window_readings,
+		context_readings=args.context_readings,
+		epochs=args.epochs,
+	)
 
 if __name__ == "__main__":
 	main()

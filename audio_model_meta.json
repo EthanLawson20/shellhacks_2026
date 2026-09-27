@@ -1,0 +1,12 @@
+{
+  "input": "audio_db temporal patches",
+  "threshold_db": 90.0,
+  "min_loud_fraction": 0.2,
+  "window_readings": 20,
+  "context_readings": 8,
+  "normalization_db": 20.0,
+  "labels": [
+    "not_loud",
+    "loud"
+  ]
+}
