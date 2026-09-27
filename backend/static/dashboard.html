@@ -27,31 +27,16 @@
   .brand-mark { width:29px; height:29px; fill:none; stroke:var(--green); stroke-width:1.8; }
   .brand-mark circle { fill:var(--green); stroke:none; }
   .header-meta { display:flex; align-items:center; gap:26px; }
-  .header-label,.eyebrow,.section-index,.input-label { font-size:13px; font-weight:600; letter-spacing:.04em; }
+  .header-label,.section-index,.input-label { font-size:13px; font-weight:600; letter-spacing:.04em; }
   .header-label { color:var(--muted); }
   .status { display:flex; align-items:center; gap:10px; min-width:130px; padding:8px 12px;
             border:1px solid var(--line); border-radius:4px; color:var(--muted); font-size:13px; }
   .dot { display:inline-block; width:8px; height:8px; flex:0 0 8px; border-radius:50%;
          background:var(--white); opacity:.55; }
   .dot.ok { background:var(--green); opacity:1; box-shadow:0 0 0 5px rgba(184,244,107,.12); }
-  .overview { display:flex; align-items:end; justify-content:space-between; gap:30px; padding:72px 0 39px; }
-  .eyebrow { margin:0 0 14px; color:var(--green); }
-  h1 { margin:0 0 12px; font-size:clamp(48px,5vw,70px); font-weight:500;
-       line-height:1.06; letter-spacing:-.045em; }
-  h1 span { color:var(--green); }
-  .lede { max-width:570px; margin:0; color:var(--muted); font-size:16px; }
-  .last-updated { margin-bottom:5px; color:var(--muted); font-size:13px; white-space:nowrap; }
-  .summary { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); border:1px solid var(--line);
-             border-radius:4px; background:var(--gray); }
-  .summary-item { display:flex; flex-direction:column; gap:18px; min-height:125px; padding:22px 26px; }
-  .summary-item+.summary-item { border-left:1px solid var(--line); }
-  .summary-item span { color:var(--muted); font-size:13px; }
-  .summary-item strong { color:var(--white); font-size:31px; font-weight:500; line-height:1; letter-spacing:-.05em; }
-  .summary-item:first-child strong { color:var(--green); }
-  .summary-item strong.is-active { color:var(--green); }
   .demo-panel { display:flex; align-items:center; justify-content:space-between; gap:28px;
-                padding:24px 0; border-bottom:1px solid var(--line); }
-  .demo-panel h2 { margin:0 0 4px; font-size:20px; font-weight:500; letter-spacing:-.035em; }
+                padding:60px 0 32px; border-bottom:1px solid var(--line); }
+  .demo-panel h1 { margin:0 0 5px; font-size:clamp(25px,3vw,34px); font-weight:500; letter-spacing:-.04em; }
   .demo-panel p { margin:0; color:var(--muted); font-size:14px; }
   .demo-panel button { flex:0 0 auto; }
   .demo-panel button.is-active { background:transparent; border-color:var(--line); color:var(--white); }
@@ -81,7 +66,7 @@
   button.is-recording:hover { border-color:var(--white); }
   button:disabled { cursor:wait; opacity:.6; }
   .action-message { min-height:1.4em; padding-top:7px; font-size:12px!important; }
-  .zone-section { padding:0 0 100px; }
+  .zone-section { padding:0 0 55px; }
   .section-heading { display:flex; justify-content:space-between; align-items:baseline; gap:20px;
                      padding:0 0 22px; margin-bottom:24px; border-bottom:1px solid var(--line); }
   .section-heading h2 { margin:0; font-size:clamp(24px,2.2vw,31px); font-weight:500; letter-spacing:-.04em; }
@@ -106,11 +91,41 @@
   .bar { height:5px; margin:0 0 22px; overflow:hidden; background:var(--black); border-radius:5px; }
   .bar span { display:block; height:100%; background:var(--green); transition:width .2s; }
   .zone.CLEAR .bar span { background:var(--muted); }
+  .audio-panel { margin:0 0 21px; padding-top:18px; border-top:1px solid var(--line); }
+  .audio-heading,.audio-result { display:flex; align-items:center; justify-content:space-between; gap:10px; }
+  .audio-heading { margin-bottom:10px; color:var(--muted); font-size:12px; }
+  .audio-heading strong { color:var(--white); font-weight:500; }
+  .waveform { position:relative; height:86px; overflow:hidden; background:var(--black); border:1px solid var(--line); border-radius:3px; }
+  .waveform svg { display:block; width:100%; height:100%; }
+  .waveform line { stroke:rgba(255,255,255,.2); stroke-width:1; }
+  .waveform path { fill:none; stroke:var(--green); stroke-width:2; stroke-linecap:round; stroke-linejoin:round; vector-effect:non-scaling-stroke; }
+  .waveform-empty { position:absolute; inset:0; display:grid; place-items:center; color:var(--muted); font-size:12px; }
+  .audio-result { padding-top:11px; font-size:12px; color:var(--muted); }
+  .audio-result strong { color:var(--white); font-size:16px; font-weight:600; white-space:nowrap; }
+  .audio-result strong.has-score { color:var(--green); }
   .readings { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:12px; margin:0; padding-top:17px; border-top:1px solid var(--line); }
   .readings div { min-width:0; }
   .readings dt { margin-bottom:4px; color:var(--muted); font-size:11px; }
   .readings dd { margin:0; font-size:14px; font-weight:500; white-space:nowrap; }
   .zone-footer { margin-top:22px; color:var(--muted); font-size:11px; }
+  .heatmap-section { padding:0 0 100px; }
+  .heatmap-panel { padding:22px; border:1px solid var(--line); background:var(--gray); }
+  .heatmap-topline { display:flex; justify-content:space-between; gap:16px; margin-bottom:15px;
+                     color:var(--muted); font-size:12px; }
+  .heatmap-topline strong { color:var(--white); font-weight:500; }
+  .heatmap-grid-wrap { position:relative; }
+  .heatmap-grid { display:grid; grid-template-columns:repeat(var(--cols,16),minmax(0,1fr));
+                  gap:2px; width:100%; aspect-ratio:16/7; min-height:220px; padding:12px; background:var(--black); }
+  .heatmap-cell { min-width:0; min-height:0; background:rgba(184,244,107,var(--intensity)); }
+  .heatmap-empty { position:absolute; inset:0; display:grid; place-content:center; gap:5px;
+                    padding:20px; text-align:center; background:rgba(11,13,12,.72); }
+  .heatmap-empty[hidden] { display:none; }
+  .heatmap-empty strong { font-size:20px; font-weight:500; }
+  .heatmap-empty span { color:var(--muted); font-size:13px; }
+  .heatmap-bottomline { display:flex; justify-content:space-between; align-items:center; gap:16px;
+                        margin-top:15px; color:var(--muted); font-size:12px; }
+  .heatmap-scale { display:flex; align-items:center; gap:9px; white-space:nowrap; }
+  .heatmap-scale span { width:96px; height:7px; background:linear-gradient(90deg,var(--black),var(--green)); }
   .empty { padding:75px 28px; text-align:center; border:1px solid var(--line); border-radius:4px; }
   .empty-mark { display:block; width:14px; height:14px; margin:0 auto 24px; border-radius:50%;
                 background:var(--green); box-shadow:0 0 0 13px rgba(184,244,107,.1),0 0 0 26px rgba(184,244,107,.04); }
@@ -118,18 +133,18 @@
   .empty p { margin:0; color:var(--muted); }
   .site-footer { padding:26px 0; border-top:1px solid var(--line); color:var(--muted); font-size:13px; }
   .footer-inner { display:flex; justify-content:space-between; gap:20px; }
-  @media(max-width:900px) { .overview { align-items:start; flex-direction:column; }
+  @media(max-width:900px) {
     .session-panel { align-items:start; flex-direction:column; }
     .session-area,.session-controls { width:100%; } .input-wrap { flex:1; } }
   @media(max-width:600px) { .shell { width:min(100% - 36px,1320px); }
     .header-inner { min-height:72px; } .header-label { display:none; }
-    .overview { padding:54px 0 34px; gap:14px; } h1 { font-size:clamp(43px,10vw,62px); }
-    .lede { font-size:15px; } .summary { grid-template-columns:1fr 1fr; }
-    .summary-item { min-height:104px; padding:18px; }.summary-item:nth-child(3) { grid-column:1/-1; border-left:0; border-top:1px solid var(--line); }
-    .demo-panel { align-items:stretch; flex-direction:column; gap:16px; }.demo-panel button { width:100%; }
+    .demo-panel { align-items:stretch; flex-direction:column; gap:16px; padding-top:42px; }.demo-panel button { width:100%; }
     .session-panel { margin:20px 0 60px; padding:22px; }.session-controls { align-items:stretch; flex-direction:column; }
     .input-wrap,button { width:100%; } .section-index { display:none; } .zone-section { padding-bottom:76px; }
     .zone { padding:22px; } .readings { gap:6px; } .readings dd { font-size:12px; }
+    .zone-section { padding-bottom:46px; } .heatmap-panel { padding:14px; }
+    .heatmap-grid { aspect-ratio:4/3; min-height:180px; padding:7px; gap:1px; }
+    .heatmap-bottomline { align-items:start; flex-direction:column; }
     .footer-inner { flex-direction:column; gap:4px; } }
 </style>
 </head>
@@ -138,35 +153,33 @@
   <div class="shell header-inner">
     <a class="brand" href="/" aria-label="Phase home">
       <svg class="brand-mark" viewBox="0 0 40 40" aria-hidden="true"><path d="M7 28 15 9 32 13 34 30 20 35 7 28 32 13M15 9 20 35M7 28 34 30"/><circle cx="7" cy="28" r="3"/><circle cx="15" cy="9" r="3"/><circle cx="32" cy="13" r="3"/><circle cx="34" cy="30" r="3"/><circle cx="20" cy="35" r="3"/></svg>
-      <span>Phase</span>
+      <span>PHASE</span>
     </a>
     <div class="header-meta"><span class="header-label">Operations</span><span class="status"><span class="dot" id="dot"></span><span id="conn">Connecting</span></span></div>
   </div>
 </header>
 
 <main class="shell">
-  <div class="overview">
-    <div><p class="eyebrow">FIELD MONITORING</p><h1>Live operations<span>.</span></h1><p class="lede">A current view of sensing activity across the monitored area.</p></div>
-    <span class="last-updated" id="last-updated">Awaiting sensor data</span>
-  </div>
-  <section class="summary" aria-label="Current overview">
-    <div class="summary-item"><span>Zones reporting</span><strong id="zone-count">0</strong></div>
-    <div class="summary-item"><span>Activity detected</span><strong id="activity-count">0</strong></div>
-    <div class="summary-item"><span>Recording</span><strong id="session-state">Off</strong></div>
-  </section>
   <section class="demo-panel" aria-label="Sample data preview">
-    <div><h2>Preview incoming data</h2><p>Watch sample zone readings arrive and change. Demo data stays in this browser and is never recorded.</p></div>
+    <div><h1>Preview incoming data</h1><p>Watch sample zone readings arrive and change. Demo data stays in this browser and is never recorded.</p></div>
     <button id="demo-toggle" type="button" aria-pressed="false">Start demo data</button>
-  </section>
-  <section class="session-panel" aria-labelledby="session-title">
-    <div><h2 id="session-title">Session recording</h2><p>Save incoming readings under a session label for later review.</p></div>
-    <div class="session-area"><div class="session-controls"><label class="input-wrap" for="label"><span class="input-label">Session label</span><input id="label" placeholder="e.g. North corridor"></label><button id="toggle">Start session</button></div><p class="action-message" id="action-message" role="status" aria-live="polite"></p></div>
   </section>
   <section class="zone-section" aria-labelledby="zones-title">
     <div class="section-heading"><h2 id="zones-title">Zone readings</h2><span class="section-index">Updates automatically</span></div>
     <p class="demo-notice" id="demo-notice" role="status" hidden>Showing sample data. These readings are illustrative and are not coming from sensors.</p>
     <div class="zones" id="zones"></div>
     <div class="empty" id="empty"><span class="empty-mark" aria-hidden="true"></span><h3>No readings yet</h3><p>Connected zones will appear here when their first reading arrives.</p></div>
+  </section>
+  <section class="heatmap-section" aria-labelledby="heatmap-title">
+    <div class="section-heading"><h2 id="heatmap-title">Spatial heatmap</h2><span class="section-index" id="heatmap-status">Awaiting map data</span></div>
+    <div class="heatmap-panel">
+      <div class="heatmap-topline"><strong>CSI environmental change</strong><span id="heatmap-source">No spatial feed connected</span></div>
+      <div class="heatmap-grid-wrap">
+        <div class="heatmap-grid" id="heatmap-grid" role="img" aria-label="No spatial heatmap data"></div>
+        <div class="heatmap-empty" id="heatmap-empty"><strong>Heatmap awaiting data</strong><span>Spatial values need calibrated CSI and known node positions.</span></div>
+      </div>
+      <div class="heatmap-bottomline"><span id="heatmap-note">A motion score from each zone cannot locate activity within the scene.</span><span class="heatmap-scale">Low <span aria-hidden="true"></span> High</span></div>
+    </div>
   </section>
 </main>
 <footer class="site-footer"><div class="shell footer-inner"><span>Phase</span><span>Readings support, but do not replace, on-site assessment.</span></div></footer>
@@ -178,13 +191,14 @@ const connEl  = document.getElementById('conn');
 const dotEl   = document.getElementById('dot');
 const toggle  = document.getElementById('toggle');
 const labelEl = document.getElementById('label');
-const zoneCountEl = document.getElementById('zone-count');
-const activityCountEl = document.getElementById('activity-count');
-const sessionStateEl = document.getElementById('session-state');
-const lastUpdatedEl = document.getElementById('last-updated');
 const actionMessageEl = document.getElementById('action-message');
 const demoToggle = document.getElementById('demo-toggle');
 const demoNotice = document.getElementById('demo-notice');
+const heatmapGrid = document.getElementById('heatmap-grid');
+const heatmapEmpty = document.getElementById('heatmap-empty');
+const heatmapStatus = document.getElementById('heatmap-status');
+const heatmapSource = document.getElementById('heatmap-source');
+const heatmapNote = document.getElementById('heatmap-note');
 
 const zones = new Map();      // zone letter -> latest reading
 const liveZones = new Map();  // continue collecting real readings while the preview is open
@@ -192,17 +206,20 @@ let session = null;
 let demoActive = false;
 let demoTimer = null;
 let demoStep = 0;
+let renderedHeatmapKey = '';
+let heatmapRevision = 0;
+let liveHeatmap = null;
+let demoHeatmap = null;
 
 const STALE_MS = 3000;
 const DEMO_FRAMES = [
   { A:'CLEAR' },
   { A:'CLEAR', B:'CLEAR' },
-  { A:'CLEAR', B:'CLEAR', C:'CLEAR' },
-  { A:'CLEAR', B:'PRESENCE', C:'CLEAR' },
-  { A:'CLEAR', B:'MOVING', C:'CLEAR' },
-  { A:'PRESENCE', B:'MOVING', C:'CLEAR' },
-  { A:'MOVING', B:'PRESENCE', C:'CLEAR' },
-  { A:'CLEAR', B:'CLEAR', C:'CLEAR' },
+  { A:'CLEAR', B:'PRESENCE' },
+  { A:'CLEAR', B:'MOVING' },
+  { A:'PRESENCE', B:'MOVING' },
+  { A:'MOVING', B:'PRESENCE' },
+  { A:'CLEAR', B:'CLEAR' },
 ];
 
 function escapeHtml(value) {
@@ -226,16 +243,81 @@ function statusIcon(state) {
   return `<svg class="status-icon" viewBox="0 0 96 96" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${STATUS_ICONS[state] || STATUS_ICONS.NO_SIGNAL}</svg>`;
 }
 
+// Incoming audio_waveform values are normalized microphone samples in [-1, 1].
+function waveformSamples(values) {
+  if (!Array.isArray(values) || values.length < 2) return null;
+  const samples = values.map(Number);
+  if (!samples.every(Number.isFinite)) return null;
+  const count = Math.min(samples.length, 96);
+  return Array.from({ length:count }, (_, i) => Math.max(-1, Math.min(1,
+    samples[Math.round(i * (samples.length - 1) / (count - 1))])));
+}
+
+function audioGraph(z, stale) {
+  const samples = stale ? null : waveformSamples(z.audio_waveform);
+  const path = samples?.map((sample, i) => `${i ? 'L' : 'M'}${(i * 240 / (samples.length - 1)).toFixed(1)} ${(42 - sample * 35).toFixed(1)}`).join(' ');
+  const score = z.scream_score === null || z.scream_score === undefined ? NaN : Number(z.scream_score);
+  const hasScore = !stale && Number.isFinite(score) && score >= 0 && score <= 1;
+  return `<div class="audio-panel">
+    <div class="audio-heading"><span>Microphone waveform</span><strong>${samples ? 'Latest window' : 'No waveform'}</strong></div>
+    <div class="waveform" role="img" aria-label="${samples ? 'Microphone waveform for zone ' + escapeHtml(z.zone) : 'No waveform samples available'}">
+      <svg viewBox="0 0 240 84" preserveAspectRatio="none" aria-hidden="true"><line x1="0" y1="42" x2="240" y2="42"/>${path ? `<path d="${path}"/>` : ''}</svg>
+      ${samples ? '' : '<span class="waveform-empty">Awaiting waveform samples</span>'}
+    </div>
+    <div class="audio-result"><span>Scream model score</span><strong class="${hasScore ? 'has-score' : ''}">${hasScore ? `${Math.round(score * 100)}%` : 'No model output'}</strong></div>
+  </div>`;
+}
+
+// Spatial map values must come from a calibrated processor; motion alone is not a map.
+function spatialHeatmap(data) {
+  if (!data || typeof data !== 'object') return null;
+  const { width, height, values } = data;
+  if (!Number.isInteger(width) || !Number.isInteger(height) || width < 4 || width > 32 ||
+      height < 3 || height > 24 || !Array.isArray(values) || values.length !== width * height) return null;
+  const cells = values.map(Number);
+  if (!cells.every(value => Number.isFinite(value) && value >= 0 && value <= 1)) return null;
+  return { width, height, values:cells };
+}
+
+function demoSpatialHeatmap(frame) {
+  const width = 16, height = 7;
+  const strength = state => state === 'MOVING' ? 0.94 : state === 'PRESENCE' ? 0.55 : 0.07;
+  const values = Array.from({length:width * height}, (_, i) => {
+    const x = (i % width + 0.5) / width;
+    const y = (Math.floor(i / width) + 0.5) / height;
+    const a = strength(frame.A) * Math.exp(-((x - 0.28) ** 2 + (y - 0.52) ** 2) / 0.022);
+    const b = frame.B ? strength(frame.B) * Math.exp(-((x - 0.72) ** 2 + (y - 0.52) ** 2) / 0.022) : 0;
+    return Math.min(1, Number((a + b).toFixed(3)));
+  });
+  return { width, height, values };
+}
+
+function renderHeatmap(now) {
+  const source = demoActive ? demoHeatmap : liveHeatmap;
+  const fresh = source && now - Date.parse(source.ts) <= STALE_MS;
+  const key = fresh ? `${demoActive ? 'demo' : 'live'}:${source.revision}` : 'empty';
+  if (key === renderedHeatmapKey) return;
+  renderedHeatmapKey = key;
+  const map = fresh ? source.map : {width:16, height:7, values:Array(16 * 7).fill(0)};
+  heatmapGrid.style.setProperty('--cols', String(map.width));
+  heatmapGrid.innerHTML = map.values.map(value =>
+    `<span class="heatmap-cell" style="--intensity:${(0.04 + value * 0.9).toFixed(2)}"></span>`).join('');
+  heatmapGrid.setAttribute('aria-label', fresh
+    ? `${demoActive ? 'Illustrative demo' : 'Incoming'} CSI environmental-change heatmap`
+    : 'No spatial heatmap data');
+  heatmapEmpty.hidden = !!fresh;
+  heatmapStatus.textContent = !fresh ? 'Awaiting map data' : demoActive ? 'Illustrative demo' : 'Map data received';
+  heatmapSource.textContent = !fresh ? 'No spatial feed connected' : demoActive ? 'Demo · Zones A and B' : 'Latest spatial reading';
+  heatmapNote.textContent = !fresh
+    ? 'A motion score from each zone cannot locate activity within the scene.'
+    : demoActive
+      ? 'Synthetic A/B activity only. Bright areas are not survivor locations.'
+      : 'Incoming map values are shown as provided; verify calibration before using them.';
+}
+
 function render() {
   emptyEl.style.display = zones.size ? 'none' : 'block';
   const now = Date.now();
-  const current = [...zones.values()].filter(z => now - Date.parse(z.ts) <= STALE_MS);
-  zoneCountEl.textContent = String(current.length);
-  activityCountEl.textContent = String(current.filter(z => z.state === 'PRESENCE' || z.state === 'MOVING').length);
-  const newest = Math.max(...[...zones.values()].map(z => Date.parse(z.ts)).filter(Number.isFinite));
-  lastUpdatedEl.textContent = Number.isFinite(newest)
-    ? `Last reading ${Math.max(0, (now - newest) / 1000).toFixed(1)}s ago`
-    : 'Awaiting sensor data';
   zonesEl.innerHTML = [...zones.values()].sort((a,b) => a.zone.localeCompare(b.zone))
     .map(z => {
       const age = now - Date.parse(z.ts);
@@ -250,12 +332,14 @@ function render() {
         <div class="zone-status">${statusIcon(stale ? 'NO_SIGNAL' : state)}<span class="state">${displayState}</span></div>
         <div class="motion-row"><span>Motion index</span><strong>${Number.isFinite(motion) ? motion.toFixed(2) : '—'}</strong></div>
         <div class="bar" role="progressbar" aria-label="Motion index" aria-valuemin="0" aria-valuemax="2" aria-valuenow="${motionValue}"><span style="width:${pct}%"></span></div>
+        ${audioGraph(z, stale)}
         <dl class="readings"><div><dt>Audio level</dt><dd>${reading(z.audio_db, ' dB')}</dd></div>
           <div><dt>Signal</dt><dd>${reading(z.rssi, ' dBm')}</dd></div>
           <div><dt>Battery</dt><dd>${reading(z.battery_pct, '%')}</dd></div></dl>
         <div class="zone-footer">${stale ? 'Waiting for a new reading' : `Updated ${Math.max(0, age / 1000).toFixed(1)}s ago`}</div>
       </article>`;
     }).join('');
+  renderHeatmap(now);
 }
 
 function setSession(id) {
@@ -263,14 +347,14 @@ function setSession(id) {
   toggle.textContent = id ? 'Stop session' : 'Start session';
   toggle.classList.toggle('is-recording', !!id);
   labelEl.disabled = !!id;
-  sessionStateEl.textContent = id ? 'On' : 'Off';
-  sessionStateEl.classList.toggle('is-active', !!id);
   actionMessageEl.textContent = '';
   toggle.disabled = demoActive && !id;
 }
 
 function applyLiveReading(data) {
   liveZones.set(data.zone, data);
+  const map = spatialHeatmap(data.spatial_heatmap);
+  if (map) liveHeatmap = {map, ts:data.ts, revision:++heatmapRevision};
   if (!demoActive) {
     zones.set(data.zone, data);
     render();
@@ -278,14 +362,21 @@ function applyLiveReading(data) {
 }
 
 function nextDemoFrame() {
-  const frameIndex = demoStep < 3 ? demoStep : 2 + (demoStep - 2) % (DEMO_FRAMES.length - 2);
+  const frameIndex = demoStep < DEMO_FRAMES.length ? demoStep : 1 + (demoStep - 1) % (DEMO_FRAMES.length - 1);
   const frame = DEMO_FRAMES[frameIndex];
   const ts = new Date().toISOString();
+  demoHeatmap = {map:demoSpatialHeatmap(frame), ts, revision:++heatmapRevision};
   for (const [zone, state] of Object.entries(frame)) {
     const motion = state === 'MOVING' ? 0.84 : state === 'PRESENCE' ? 0.28 : 0.06;
+    const screamScore = zone === 'B' && (frameIndex === 4 || frameIndex === 5) ? 0.87 : 0.08 + (zone.charCodeAt(0) - 65) * 0.05;
+    const amplitude = screamScore > 0.8 ? 0.84 : 0.17;
+    const audioWaveform = Array.from({length:64}, (_, i) =>
+      Number((amplitude * Math.sin(i * (0.68 + zone.charCodeAt(0) * 0.003) + demoStep * 0.7)
+        * (0.55 + 0.45 * Math.sin(i * 0.13 + demoStep) ** 2)).toFixed(3)));
     zones.set(zone, {
       zone, name: `Zone ${zone}`, ts, state, presence: state !== 'CLEAR',
       motion, audio_db: state === 'MOVING' ? 67 : 42 + zone.charCodeAt(0) - 65,
+      audio_waveform: audioWaveform, scream_score: screamScore,
       rssi: -67 - (zone.charCodeAt(0) - 65) * 5, battery_pct: 94 - (zone.charCodeAt(0) - 65) * 7,
     });
   }
@@ -307,6 +398,7 @@ demoToggle.onclick = () => {
   } else {
     clearInterval(demoTimer);
     demoTimer = null;
+    demoHeatmap = null;
     zones.clear();
     for (const [zone, data] of liveZones) zones.set(zone, data);
     render();
@@ -346,7 +438,14 @@ function connect() {
     const msg = JSON.parse(e.data);
     if (msg.type === 'snapshot') {
       liveZones.clear();
-      msg.zones.forEach(z => liveZones.set(z.zone, z));
+      liveHeatmap = null;
+      msg.zones.forEach(z => {
+        liveZones.set(z.zone, z);
+        const map = spatialHeatmap(z.spatial_heatmap);
+        if (map && (!liveHeatmap || Date.parse(z.ts) > Date.parse(liveHeatmap.ts))) {
+          liveHeatmap = {map, ts:z.ts, revision:++heatmapRevision};
+        }
+      });
       if (!demoActive) {
         zones.clear();
         for (const [zone, data] of liveZones) zones.set(zone, data);

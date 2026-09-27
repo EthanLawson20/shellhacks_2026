@@ -20,16 +20,17 @@
       <div class="container nav-wrap">
         <a class="brand" href="/" aria-label="Phase home">
           <svg class="brand-mark" viewBox="0 0 40 40" aria-hidden="true"><path d="M7 28 15 9 32 13 34 30 20 35 7 28 32 13M15 9 20 35M7 28 34 30"/><circle cx="7" cy="28" r="3"/><circle cx="15" cy="9" r="3"/><circle cx="32" cy="13" r="3"/><circle cx="34" cy="30" r="3"/><circle cx="20" cy="35" r="3"/></svg>
-          <span>Phase</span>
+          <span>PHASE</span>
         </a>
         <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="primary-nav" aria-label="Open navigation">
           <span></span><span></span><span></span>
         </button>
         <nav class="nav" id="primary-nav" aria-label="Primary navigation">
-          <a href="#architecture">Network architecture</a>
-          <a href="#audio-intelligence">Audio intelligence</a>
-          <a href="#challenge">The challenge</a>
-          <a href="#deployment-paths">Deployment paths</a>
+          <a href="#system-architecture">System Architecture</a>
+          <a href="#network-architecture">Network Architecture</a>
+          <a href="#ml-architecture">ML Architecture</a>
+          <a href="#user-case">User Case</a>
+          <a href="#future-developments">Future Developments</a>
           <a class="nav-cta" id="dashboard-link" href="/backend/static/dashboard.html">Recording dashboard <span aria-hidden="true">→</span></a>
         </nav>
       </div>
@@ -46,15 +47,28 @@
             </div>
         </div>
         <div class="container hero-copy reveal">
-          <h1 id="hero-title">See beyond the horizon with<em> Phase.</em></h1>
+          <h1 id="hero-title">See beyond the horizon with<em> PHASE.</em></h1>
           <p>Phase is a network of microcontrollers that combines Wi-Fi sensing and audio analysis to help rescuers identify possible signs of life. Explore the following interactive simulation to see how its network works.</p>
         </div>
       </section>
 
-      <section class="architecture-section section-pad" id="architecture" aria-labelledby="architecture-title">
+      <section class="system-architecture section-pad" id="system-architecture" aria-labelledby="system-architecture-title">
+        <div class="container">
+          <div class="system-architecture-heading reveal">
+            <div class="section-kicker"><span class="index">01</span><span>SYSTEM ARCHITECTURE</span></div>
+          </div>
+          <figure class="system-architecture-figure reveal">
+            <p class="system-diagram-hint">Swipe to explore the full diagram <span aria-hidden="true">→</span></p>
+            <div class="system-diagram-scroll"><div class="system-diagram-crop"><img src="system-architecture.png" width="886" height="819" loading="lazy" decoding="async" alt="System architecture diagram with four layers: sender, node, and gateway hardware; audio and CSI analysis; a priority engine; and a dashboard with audio, priority, and heatmap views." /></div></div>
+            <figcaption>Concept architecture. The current dashboard demo uses Zones A and B; live model fusion and spatial heatmap output still require integration.</figcaption>
+          </figure>
+        </div>
+      </section>
+
+      <section class="network-architecture section-pad" id="network-architecture" aria-labelledby="network-architecture-title">
         <div class="container architecture-grid">
           <div class="architecture-visual reveal">
-            <div class="architecture-kicker" id="architecture-title"><span>02</span> NETWORK ARCHITECTURE</div>
+            <h2 class="section-kicker network-architecture-heading" id="network-architecture-title"><span class="index">02</span><span>NETWORK ARCHITECTURE</span></h2>
             <figure class="architecture-figure">
               <img src="network-architecture.png" width="980" height="696" alt="Star network diagram: one sender broadcasts to three receiving nodes. Each node reports to a central gateway, which connects to a display." />
             </figure>
@@ -70,11 +84,11 @@
         </div>
       </section>
 
-      <section class="audio-intelligence section-pad" id="audio-intelligence" aria-labelledby="audio-intelligence-title">
+      <section class="ml-architecture section-pad" id="ml-architecture" aria-labelledby="ml-architecture-title">
         <div class="container">
-          <div class="audio-intelligence-heading reveal">
-            <div class="section-kicker"><span class="index">03</span><span>AUDIO INTELLIGENCE</span></div>
-            <div><h2 id="audio-intelligence-title">Recognizing sounds that <span>may need attention.</span></h2><p>Node microphones provide another source of information. A neural network is designed to analyze short audio samples and score patterns associated with human screams, adding an audio signal for responders to evaluate.</p></div>
+          <div class="ml-architecture-heading reveal">
+            <div class="section-kicker"><span class="index">03</span><span>ML ARCHITECTURE</span></div>
+            <div><h2 id="ml-architecture-title">Recognizing signals that <span>may need attention.</span></h2><p>Wi-Fi CSI is compared with a room baseline to identify changes in movement. The audio network shown below is designed to score short microphone samples for patterns associated with human screams.</p></div>
           </div>
           <figure class="model-figure reveal">
             <div class="model-figure-top"><span>NEURAL NETWORK / AUDIO CLASSIFICATION</span><span>MODEL ARCHITECTURE</span></div>
@@ -84,23 +98,23 @@
         </div>
       </section>
 
-      <section class="challenge section-pad" id="challenge" aria-labelledby="challenge-title">
+      <section class="user-case section-pad" id="user-case" aria-labelledby="user-case-title">
         <div class="container">
-          <div class="challenge-heading reveal">
-            <div class="section-kicker"><span class="index">04</span><span>THE CHALLENGE</span></div>
-            <h2 id="challenge-title">In a rescue, every second spent searching the wrong spot can <span>cost a life.</span></h2>
+          <div class="user-case-heading reveal">
+            <div class="section-kicker"><span class="index">04</span><span>USER CASE</span></div>
+            <h2 id="user-case-title">In a rescue, every second spent searching the wrong spot can <span>cost a life.</span></h2>
           </div>
-          <div class="challenge-grid">
-            <article class="challenge-item reveal"><span class="challenge-number">01</span><h3>Sees through smoke and debris</h3><p>Our star network is designed to detect movement and breathing where cameras go blind, even when survivors cannot call for help.</p></article>
-            <article class="challenge-item reveal"><span class="challenge-number">02</span><h3>Scans the whole scene at once</h3><p>Instead of one radar checking one spot at a time, the receiving nodes monitor their zones simultaneously and report to a central gateway.</p></article>
-            <article class="challenge-item reveal"><span class="challenge-number">03</span><h3>Low cost, deployed in minutes</h3><p>Built from low-cost nodes, the system is designed for rapid placement and calibration, giving responders a live view of where to search first.</p></article>
+          <div class="user-case-grid">
+            <article class="user-case-item reveal"><span class="user-case-number">01</span><h3>Sees through smoke and debris</h3><p>Our star network is designed to detect movement and breathing where cameras go blind, even when survivors cannot call for help.</p></article>
+            <article class="user-case-item reveal"><span class="user-case-number">02</span><h3>Scans the whole scene at once</h3><p>Instead of one radar checking one spot at a time, the receiving nodes monitor their zones simultaneously and report to a central gateway.</p></article>
+            <article class="user-case-item reveal"><span class="user-case-number">03</span><h3>Low cost, deployed in minutes</h3><p>Built from low-cost nodes, the system is designed for rapid placement and calibration, giving responders a live view of where to search first.</p></article>
           </div>
         </div>
       </section>
 
-      <section class="deployment-paths section-pad" id="deployment-paths" aria-labelledby="deployment-paths-title">
+      <section class="future-developments section-pad" id="future-developments" aria-labelledby="future-developments-title">
         <div class="container">
-          <h2 class="deployment-paths-label reveal" id="deployment-paths-title"><span aria-hidden="true"></span>Future deployment paths</h2>
+          <h2 class="section-kicker future-developments-heading reveal" id="future-developments-title"><span class="index">05</span><span>FUTURE DEVELOPMENTS</span></h2>
           <div class="deployment-path-grid">
             <article class="deployment-path-card deployment-path-first reveal">
               <div class="deployment-path-art building-art" aria-hidden="true"><span></span><span></span><span></span><span></span><i></i></div>

@@ -34,7 +34,7 @@ The spectrum analyzes numeric samples; it does not identify Wi-Fi radio interfer
 
 ## Live CSI environmental-change heatmap
 
-The optional `csi_heatmap.py` view uses the existing Railway JSON client and leaves `vizualizer.py` and its spectrum processing unchanged. Since the repository has no ESP CSI firmware or real CSI endpoint yet, this view requires a backend route that returns amplitude values per CSI subcarrier. It displays **CSI Environmental Change**, not a person classification.
+The optional `csi_heatmap.py` view uses the existing Railway JSON client and leaves `vizualizer.py` and its spectrum processing unchanged. The node firmware captures CSI, but its normal LoRa packet sends only a scalar motion score; this view still requires a backend route that returns amplitude values per CSI subcarrier. It displays **CSI Environmental Change**, not a person classification.
 
 Supported response shapes include one CSI vector:
 
@@ -103,7 +103,8 @@ The hero loads the 3D scene immediately over a quiet background, then the room a
 - `index.html` — content and page structure
 - `styles.css` — layout, responsive design, and animation
 - `script.js` — mobile navigation and scroll reveals
-- `network-architecture.png` — supplied star-network diagram used in section 04
+- `system-architecture.png` — system-flow diagram used in section 01
+- `network-architecture.png` — supplied star-network diagram used in section 02
 - `scene.js` — interactive Three.js cutaway room and entrance animation
 - `favicon.svg` — site icon
 - `package.json` / `package-lock.json` — dependencies and reproducible build
@@ -113,3 +114,27 @@ The hero loads the 3D scene immediately over a quiet background, then the room a
 `git status` shows changed files and your current branch. `git diff` shows your edits. `git add <file>` chooses what goes into the next snapshot. `git commit -m "message"` saves that snapshot locally. `git pull --rebase` brings in teammates' commits before yours, and `git push` shares your commits with GitHub.
 
 Before working, run `git pull --rebase`. Before pushing, check `git status` and `git diff` so you know exactly what you are sharing.
+
+## Dashboard audio data
+
+Each dashboard card belongs to the reading's `zone`. The live dashboard accepts two optional fields alongside the existing motion and audio-level fields:
+
+```json
+{"zone":"A","ts":"2026-09-27T12:00:00Z","state":"CLEAR","motion":0.06,"audio_db":43,"audio_waveform":[-0.2,0.1,0.4,-0.1],"scream_score":0.82}
+```
+
+`audio_waveform` is an array of at least two microphone samples normalized to -1 through 1; it is a display preview, not the model's input. `scream_score` is a model output from 0 through 1. The dashboard shows missing fields as unavailable instead of constructing a waveform or classification from the audio level. Its demo mode generates illustrative values only in the browser.
+
+The computer bridge also accepts optional `w` (waveform) and `sc` (score) fields in a gateway JSON line and forwards them under these names. It caps the waveform preview at 96 points. The current node and gateway firmware transmit only an audio-level number, so real waveforms and scores require firmware/protocol work and a live inference pipeline. The existing `.keras` file and `audio_model.py` are offline model artifacts; they are not called by the node, bridge, or backend. The current model preprocessing expects 44.1 kHz, 10-second WAV input, while node audio capture is 16 kHz. Live classification needs compatible preprocessing and validation before its score can be treated as an actionable signal. These optional fields are broadcast live but are not stored in recording sessions.
+
+## Dashboard spatial heatmap
+
+The dashboard has a spatial heatmap placeholder below the zone cards. In demo mode it shows a synthetic A/B activity illustration. Without a spatial map payload it stays empty; two zone motion scores are not enough to estimate positions inside a room.
+
+The dashboard accepts an optional `spatial_heatmap` object on a zone reading. It contains `width`, `height`, and a row-major `values` array of calibrated CSI-change intensities from 0 to 1. The bridge accepts the same object as `hm` in a gateway JSON line. The backend broadcasts it with the reading. For example, a 4-by-3 map has 12 values:
+
+```json
+{"zone":"A","ts":"2026-09-27T12:00:00Z","spatial_heatmap":{"width":4,"height":3,"values":[0,0.1,0.2,0,0.1,0.6,0.8,0.1,0,0.2,0.3,0]}}
+```
+
+The dashboard accepts grids from 4-by-3 through 32-by-24 and hides a map after three seconds without a new one. The existing `csi_heatmap.py` plots change by subcarrier and time; `spatial_visualizer.py` can display a link cross-section from the separate synthetic CSI feed. Neither currently produces a live, calibrated spatial grid for this dashboard. The node/gateway protocol and spatial reconstruction need to be extended before real heatmap values can appear. Map values are live-only and are not saved in recording sessions.

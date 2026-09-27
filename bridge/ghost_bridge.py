@@ -10,6 +10,7 @@ real UTC timestamp here. Lines starting with '#' are human chatter; ignored.
 import argparse
 import asyncio
 import json
+import math
 from datetime import datetime, timezone
 
 import serial
@@ -39,7 +40,7 @@ def translate(line: dict) -> dict | None:
         state = "MOVING"
     else:
         state = "PRESENCE"
-    return {
+    reading = {
         "zone": zone,
         "name": ZONE_NAMES.get(zone, f"Zone {zone}"),
         "ts": datetime.now(timezone.utc).isoformat(),
@@ -51,6 +52,46 @@ def translate(line: dict) -> dict | None:
         "rssi": int(line.get("r", 0)),
         "uptime_s": int(line.get("t", 0)),
     }
+
+    # Optional future audio fields in the same gateway JSON line. Current
+    # firmware sends only "a" (level), so neither field is invented here.
+    waveform = line.get("w", line.get("audio_waveform"))
+    if isinstance(waveform, list) and 2 <= len(waveform) <= 4096:
+        try:
+            samples = [float(sample) for sample in waveform]
+        except (TypeError, ValueError):
+            samples = []
+        if samples and all(math.isfinite(sample) for sample in samples):
+            count = min(len(samples), 96)
+            reading["audio_waveform"] = [
+                max(-1.0, min(1.0, samples[round(i * (len(samples) - 1) / (count - 1))]))
+                for i in range(count)
+            ]
+
+    score = line.get("sc", line.get("scream_score"))
+    if score is not None:
+        try:
+            score = float(score)
+        except (TypeError, ValueError):
+            score = None
+        if score is not None and math.isfinite(score) and 0.0 <= score <= 1.0:
+            reading["scream_score"] = score
+
+    # A future spatial processor can attach a calibrated, row-major map.
+    # The current LoRa data packet does not contain one.
+    heatmap = line.get("hm", line.get("spatial_heatmap"))
+    if isinstance(heatmap, dict):
+        width, height, values = heatmap.get("width"), heatmap.get("height"), heatmap.get("values")
+        if (type(width) is int and type(height) is int and 4 <= width <= 32 and
+                3 <= height <= 24 and isinstance(values, list) and len(values) == width * height):
+            try:
+                cells = [float(value) for value in values]
+            except (TypeError, ValueError):
+                cells = []
+            if cells and all(math.isfinite(value) and 0.0 <= value <= 1.0 for value in cells):
+                reading["spatial_heatmap"] = {"width": width, "height": height, "values": cells}
+
+    return reading
 
 
 async def run(port: str, baud: int, url: str, token: str) -> None:
