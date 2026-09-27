@@ -117,6 +117,8 @@ Before working, run `git pull --rebase`. Before pushing, check `git status` and 
 
 ## Dashboard audio data
 
+The dashboard's **Connect live data** section opens the backend's existing `/ws/live` WebSocket. Leave the Backend URL at the website origin when the Python backend serves the page; for a separately hosted website, enter the backend's HTTPS root URL and select **Connect live**. The connection indicator confirms the backend socket, while the sensor-feed message distinguishes an open socket from fresh node readings. The gateway-to-backend bridge must also be running for new readings to arrive. If the connection drops, the dashboard retries until **Disconnect live** is selected. Demo data remains a browser-only preview.
+
 Each dashboard card belongs to the reading's `zone`. The live dashboard accepts two optional fields alongside the existing motion and audio-level fields:
 
 ```json
