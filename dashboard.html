@@ -3,52 +3,191 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>PHASE — live zones</title>
+<meta name="theme-color" content="#0b0d0c">
+<link rel="icon" type="image/svg+xml" href="./favicon.svg">
+<link rel="preload" href="./fonts/space-grotesk-variable.woff2" as="font" type="font/woff2" crossorigin>
+<title>Phase — Live zones</title>
 <style>
-  :root { --bg:#12171d; --card:#1b232c; --line:#2b3642; --text:#e6edf3;
-          --dim:#8b9aa9; --clear:#3fb950; --presence:#d29922; --moving:#f85149; }
+  @font-face { font-family:"Space Grotesk"; src:url("./fonts/space-grotesk-variable.woff2") format("woff2"); font-style:normal; font-weight:300 700; font-display:swap; }
+  :root { --black:#0b0d0c; --white:#fff; --green:#b8f46b; --gray:#1b1f1d;
+          --muted:rgba(255,255,255,.72); --line:rgba(255,255,255,.16); }
   * { box-sizing:border-box; }
-  body { margin:0; background:var(--bg); color:var(--text);
-         font:15px/1.5 system-ui,-apple-system,sans-serif; padding:24px; }
-  header { display:flex; align-items:center; gap:16px; flex-wrap:wrap; margin-bottom:24px; }
-  h1 { font-size:20px; margin:0; letter-spacing:.02em; }
-  .status { font-size:13px; color:var(--dim); }
-  .dot { display:inline-block; width:8px; height:8px; border-radius:50%;
-         background:var(--moving); margin-right:6px; }
-  .dot.ok { background:var(--clear); }
-  button { background:var(--card); color:var(--text); border:1px solid var(--line);
-           border-radius:6px; padding:7px 14px; font-size:14px; cursor:pointer; }
-  button:hover { border-color:var(--dim); }
-  input { background:var(--card); color:var(--text); border:1px solid var(--line);
-          border-radius:6px; padding:7px 10px; font-size:14px; }
-  .zones { display:grid; gap:16px; grid-template-columns:repeat(auto-fill,minmax(260px,1fr)); }
-  .zone { background:var(--card); border:1px solid var(--line); border-left-width:4px;
-          border-radius:8px; padding:16px; }
-  .zone.CLEAR { border-left-color:var(--clear); }
-  .zone.PRESENCE { border-left-color:var(--presence); }
-  .zone.MOVING { border-left-color:var(--moving); }
-  .zone.stale { opacity:.45; border-left-color:var(--dim); }
-  .zone h2 { margin:0 0 4px; font-size:16px; }
-  .state { font-size:22px; font-weight:600; margin:8px 0; }
-  .state.CLEAR{color:var(--clear)} .state.PRESENCE{color:var(--presence)}
-  .state.MOVING{color:var(--moving)}
-  .bar { height:6px; background:#0d1117; border-radius:3px; overflow:hidden; margin:10px 0; }
-  .bar span { display:block; height:100%; background:var(--presence); transition:width .2s; }
-  .meta { display:flex; gap:14px; font-size:12px; color:var(--dim); flex-wrap:wrap; }
-  .empty { color:var(--dim); padding:40px 0; text-align:center; }
+  html { color-scheme:dark; font-synthesis:none; }
+  body { margin:0; min-height:100vh; background:var(--black); color:var(--white);
+         font:17px/1.65 "Space Grotesk",Arial,sans-serif; -webkit-font-smoothing:antialiased; }
+  button,input { font:inherit; }
+  button { cursor:pointer; }
+  :focus-visible { outline:2px solid var(--green); outline-offset:3px; }
+  .shell { width:min(100% - 88px,1320px); margin-inline:auto; }
+  .site-header { border-bottom:1px solid var(--line); }
+  .header-inner { min-height:86px; display:flex; align-items:center; justify-content:space-between; gap:28px; }
+  .brand { display:inline-flex; align-items:center; gap:13px; color:var(--white); text-decoration:none;
+           font-size:17px; font-weight:700; letter-spacing:-.045em; }
+  .brand:hover { color:var(--green); }
+  .brand-mark { width:29px; height:29px; fill:none; stroke:var(--green); stroke-width:1.8; }
+  .brand-mark circle { fill:var(--green); stroke:none; }
+  .header-meta { display:flex; align-items:center; gap:26px; }
+  .header-label,.section-index,.input-label { font-size:13px; font-weight:600; letter-spacing:.04em; }
+  .header-label { color:var(--muted); }
+  .status { display:flex; align-items:center; gap:10px; min-width:130px; padding:8px 12px;
+            border:1px solid var(--line); border-radius:4px; color:var(--muted); font-size:13px; }
+  .dot { display:inline-block; width:8px; height:8px; flex:0 0 8px; border-radius:50%;
+         background:var(--white); opacity:.55; }
+  .dot.ok { background:var(--green); opacity:1; box-shadow:0 0 0 5px rgba(184,244,107,.12); }
+  .dashboard-intro { padding:55px 0 32px; border-bottom:1px solid var(--line); }
+  .dashboard-intro h1 { margin:0 0 6px; font-size:clamp(25px,3vw,34px); font-weight:500; letter-spacing:-.04em; }
+  .dashboard-intro p { max-width:670px; margin:0; color:var(--muted); font-size:14px; }
+  .session-panel { display:flex; align-items:center; justify-content:space-between; gap:32px;
+                   margin:26px 0 76px; padding:27px 30px; border:1px solid var(--line); border-radius:4px; }
+  .session-panel h2 { margin:0 0 6px; font-size:22px; font-weight:500; letter-spacing:-.035em; }
+  .session-panel p { margin:0; color:var(--muted); font-size:14px; }
+  .session-controls { display:flex; align-items:end; gap:10px; }
+  .input-wrap { display:grid; gap:9px; min-width:265px; }
+  .input-label { color:var(--muted); font-size:12px; }
+  input { width:100%; min-height:46px; padding:10px 13px; color:var(--white); background:var(--gray);
+          border:1px solid var(--line); border-radius:4px; font-size:14px; }
+  input::placeholder { color:rgba(255,255,255,.43); }
+  input:disabled { opacity:.55; }
+  button { min-height:46px; padding:10px 18px; border:1px solid var(--green); border-radius:4px;
+           background:var(--green); color:var(--black); font-size:14px; font-weight:700; white-space:nowrap;
+           transition:background .2s,border-color .2s; }
+  button:hover { background:var(--white); border-color:var(--white); }
+  button.is-recording { background:transparent; border-color:var(--line); color:var(--white); }
+  button.is-recording:hover { border-color:var(--white); }
+  .zone-section { padding:0 0 55px; }
+  .section-heading { display:flex; justify-content:space-between; align-items:baseline; gap:20px;
+                     padding:0 0 22px; margin-bottom:24px; border-bottom:1px solid var(--line); }
+  .section-heading h2 { margin:0; font-size:clamp(24px,2.2vw,31px); font-weight:500; letter-spacing:-.04em; }
+  .section-index { color:var(--muted); font-weight:400; letter-spacing:0; }
+  .zones { display:grid; gap:18px; grid-template-columns:repeat(auto-fill,minmax(280px,1fr)); }
+  .zone { min-height:365px; padding:27px 24px 22px; background:var(--gray);
+          border:1px solid var(--line); border-radius:4px; }
+  .zone.stale { opacity:.65; }
+  .zone-head { text-align:center; }
+  .zone-id { display:block; margin-bottom:4px; color:var(--muted); font-size:11px; font-weight:600; letter-spacing:.08em; }
+  .zone h3 { margin:0; font-size:25px; font-weight:500; letter-spacing:-.04em; line-height:1.2; }
+  .zone-status { display:flex; flex-direction:column; align-items:center; justify-content:center;
+                 gap:10px; min-height:174px; margin:12px 0 20px; text-align:center; color:var(--muted); }
+  .status-icon { display:block; width:96px; height:96px; }
+  .state { color:inherit; font-size:25px; font-weight:700; letter-spacing:-.04em; line-height:1.1; }
+  .zone.PRESENCE .zone-status,.zone.MOVING .zone-status { color:var(--green); }
+  .zone.MOVING .status-icon { filter:drop-shadow(0 0 13px rgba(184,244,107,.38)); }
+  .zone.stale .zone-status { color:var(--muted); }
+  .zone.stale .status-icon { filter:none; }
+  .motion-row { display:flex; justify-content:space-between; gap:12px; margin-bottom:9px; font-size:13px; }
+  .motion-row span { color:var(--muted); }
+  .motion-row strong { font-weight:500; }
+  .bar { height:5px; margin:0 0 22px; overflow:hidden; background:var(--black); border-radius:5px; }
+  .bar span { display:block; height:100%; background:var(--green); transition:width .2s; }
+  .zone.CLEAR .bar span { background:var(--muted); }
+  .audio-panel { margin:0 0 21px; padding-top:18px; border-top:1px solid var(--line); }
+  .audio-heading,.audio-result { display:flex; align-items:center; justify-content:space-between; gap:10px; }
+  .audio-heading { margin-bottom:10px; color:var(--muted); font-size:12px; }
+  .audio-heading strong { color:var(--white); font-weight:500; }
+  .waveform { position:relative; height:86px; overflow:hidden; background:var(--black); border:1px solid var(--line); border-radius:3px; }
+  .waveform svg { display:block; width:100%; height:100%; }
+  .waveform line { stroke:rgba(255,255,255,.2); stroke-width:1; }
+  .waveform path { fill:none; stroke:var(--green); stroke-width:2; stroke-linecap:round; stroke-linejoin:round; vector-effect:non-scaling-stroke; }
+  .waveform-empty { position:absolute; inset:0; display:grid; place-items:center; color:var(--muted); font-size:12px; }
+  .audio-result { padding-top:11px; font-size:12px; color:var(--muted); }
+  .audio-result strong { color:var(--white); font-size:16px; font-weight:600; white-space:nowrap; }
+  .audio-result strong.has-score { color:var(--green); }
+  .readings { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:12px;
+              margin:0; padding-top:17px; border-top:1px solid var(--line); }
+  .readings div { min-width:0; }
+  .readings dt { margin-bottom:4px; color:var(--muted); font-size:11px; }
+  .readings dd { margin:0; font-size:14px; font-weight:500; white-space:nowrap; }
+  .zone-footer { margin-top:22px; color:var(--muted); font-size:11px; }
+  .heatmap-section { padding:0 0 100px; }
+  .heatmap-panel { padding:22px; border:1px solid var(--line); background:var(--gray); }
+  .heatmap-topline { display:flex; justify-content:space-between; gap:16px; margin-bottom:15px;
+                     color:var(--muted); font-size:12px; }
+  .heatmap-topline strong { color:var(--white); font-weight:500; }
+  .heatmap-grid-wrap { position:relative; }
+  .heatmap-grid { display:grid; grid-template-columns:repeat(var(--cols,16),minmax(0,1fr));
+                  gap:2px; width:100%; aspect-ratio:16/7; min-height:220px; padding:12px; background:var(--black); }
+  .heatmap-cell { min-width:0; min-height:0; background:rgba(184,244,107,var(--intensity)); }
+  .heatmap-empty { position:absolute; inset:0; display:grid; place-content:center; gap:5px;
+                    padding:20px; text-align:center; background:rgba(11,13,12,.72); }
+  .heatmap-empty[hidden] { display:none; }
+  .heatmap-empty[hidden] { display:none; }
+  .heatmap-empty strong { font-size:20px; font-weight:500; }
+  .heatmap-empty span { color:var(--muted); font-size:13px; }
+  .heatmap-bottomline { display:flex; justify-content:space-between; align-items:center; gap:16px;
+                        margin-top:15px; color:var(--muted); font-size:12px; }
+  .heatmap-scale { display:flex; align-items:center; gap:9px; white-space:nowrap; }
+  .heatmap-scale span { width:96px; height:7px; background:linear-gradient(90deg,var(--black),var(--green)); }
+  .empty { padding:75px 28px; text-align:center; border:1px solid var(--line); border-radius:4px; }
+  .empty-mark { display:block; width:14px; height:14px; margin:0 auto 24px; border-radius:50%;
+                background:var(--green); box-shadow:0 0 0 13px rgba(184,244,107,.1),0 0 0 26px rgba(184,244,107,.04); }
+  .empty h3 { margin:0 0 8px; font-size:25px; font-weight:500; letter-spacing:-.04em; }
+  .empty p { margin:0; color:var(--muted); }
+  .site-footer { padding:26px 0; border-top:1px solid var(--line); color:var(--muted); font-size:13px; }
+  .footer-inner { display:flex; justify-content:space-between; gap:20px; }
+  @media(max-width:900px) {
+    .session-panel { align-items:start; flex-direction:column; }
+    .session-controls { width:100%; } .input-wrap { flex:1; }
+  }
+  @media(max-width:600px) {
+    .shell { width:min(100% - 36px,1320px); }
+    .header-inner { min-height:72px; } .header-label { display:none; }
+    .dashboard-intro { padding-top:42px; }
+    .session-panel { margin:20px 0 60px; padding:22px; }
+    .session-controls { align-items:stretch; flex-direction:column; }
+    .input-wrap,button { width:100%; }
+    .section-index { display:none; }
+    .zone { padding:22px; } .readings { gap:6px; } .readings dd { font-size:12px; }
+    .zone-section { padding-bottom:46px; } .heatmap-panel { padding:14px; }
+    .heatmap-grid { aspect-ratio:4/3; min-height:180px; padding:7px; gap:1px; }
+    .heatmap-bottomline { align-items:start; flex-direction:column; }
+    .footer-inner { flex-direction:column; gap:4px; }
+  }
 </style>
 </head>
 <body>
-<header>
-  <h1>PHASE</h1>
-  <span class="status"><span class="dot" id="dot"></span><span id="conn">connecting…</span></span>
-  <span style="flex:1"></span>
-  <input id="label" placeholder="session label">
-  <button id="toggle">Start session</button>
+<header class="site-header">
+  <div class="shell header-inner">
+    <a class="brand" href="./index.html" aria-label="Phase home">
+      <svg class="brand-mark" viewBox="0 0 40 40" aria-hidden="true"><path d="M7 28 15 9 32 13 34 30 20 35 7 28 32 13M15 9 20 35M7 28 34 30"/><circle cx="7" cy="28" r="3"/><circle cx="15" cy="9" r="3"/><circle cx="32" cy="13" r="3"/><circle cx="34" cy="30" r="3"/><circle cx="20" cy="35" r="3"/></svg>
+      <span>PHASE</span>
+    </a>
+    <div class="header-meta"><span class="header-label">Operations</span><span class="status" role="status"><span class="dot" id="dot"></span><span id="conn">connecting…</span></span></div>
+  </div>
 </header>
 
-<div class="zones" id="zones"></div>
-<div class="empty" id="empty">Waiting for the first packet…</div>
+<main class="shell">
+  <section class="dashboard-intro" aria-labelledby="dashboard-title">
+    <h1 id="dashboard-title">Live zone monitoring</h1>
+    <p>Incoming readings from the Phase gateway appear here automatically. Zone estimates support on-site assessment and should be verified by responders.</p>
+  </section>
+
+  <section class="session-panel" aria-labelledby="session-title">
+    <div><h2 id="session-title">Recording session</h2><p>Save incoming readings to review after the response.</p></div>
+    <div class="session-controls">
+      <label class="input-wrap"><span class="input-label">Session label</span><input id="label" placeholder="Optional label"></label>
+      <button id="toggle" type="button">Start session</button>
+    </div>
+  </section>
+
+  <section class="zone-section" aria-labelledby="zones-title">
+    <div class="section-heading"><h2 id="zones-title">Zone readings</h2><span class="section-index">Updates automatically</span></div>
+    <div class="zones" id="zones"></div>
+    <div class="empty" id="empty"><span class="empty-mark" aria-hidden="true"></span><h3>No readings yet</h3><p>Connected zones will appear here when their first reading arrives.</p></div>
+  </section>
+
+  <section class="heatmap-section" aria-labelledby="heatmap-title">
+    <div class="section-heading"><h2 id="heatmap-title">Spatial heatmap</h2><span class="section-index" id="heatmap-status">Awaiting map data</span></div>
+    <div class="heatmap-panel">
+      <div class="heatmap-topline"><strong>CSI environmental change</strong><span id="heatmap-source">No spatial feed connected</span></div>
+      <div class="heatmap-grid-wrap">
+        <div class="heatmap-grid" id="heatmap-grid" role="img" aria-label="No spatial heatmap data"></div>
+        <div class="heatmap-empty" id="heatmap-empty"><strong>Heatmap awaiting data</strong><span>Spatial values need calibrated CSI and known node positions.</span></div>
+      </div>
+      <div class="heatmap-bottomline"><span id="heatmap-note">A motion score from each zone cannot locate activity within the scene.</span><span class="heatmap-scale">Low <span aria-hidden="true"></span> High</span></div>
+    </div>
+  </section>
+</main>
+<footer class="site-footer"><div class="shell footer-inner"><span>Phase</span><span>Readings support, but do not replace, on-site assessment.</span></div></footer>
 
 <script>
 const API = 'https://shellhacks2026-production.up.railway.app';
@@ -59,10 +198,84 @@ const connEl  = document.getElementById('conn');
 const dotEl   = document.getElementById('dot');
 const toggle  = document.getElementById('toggle');
 const labelEl = document.getElementById('label');
+const heatmapGrid = document.getElementById('heatmap-grid');
+const heatmapEmpty = document.getElementById('heatmap-empty');
+const heatmapStatus = document.getElementById('heatmap-status');
+const heatmapSource = document.getElementById('heatmap-source');
+const heatmapNote = document.getElementById('heatmap-note');
 
 const zones = new Map();
 let session = null;
 const STALE_MS = 3000;   // nodes report twice a second so 3s of quiet means something broke
+let renderedHeatmapSource;
+
+function escapeHtml(value) {
+  return String(value).replace(/[&<>"']/g, char => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]));
+}
+
+const STATUS_ICONS = {
+  CLEAR: '<circle cx="48" cy="48" r="32"/><path d="m33 48 10 10 21-22"/>',
+  PRESENCE: '<circle cx="48" cy="48" r="33"/><circle cx="48" cy="48" r="22"/><circle cx="48" cy="48" r="8" fill="currentColor" stroke="none"/>',
+  MOVING: '<circle cx="49" cy="22" r="7" fill="currentColor" stroke="none"/><path d="m43 37 13 4 8 12M43 37 31 49l-12 2m24-14-4 20 15 9 13 15M39 57 27 72l-14 6M57 41l17-1"/>',
+  NO_SIGNAL: '<circle cx="48" cy="48" r="32"/><path d="m25 25 46 46M34 48h28"/>',
+};
+
+function statusIcon(state) {
+  return `<svg class="status-icon" viewBox="0 0 96 96" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${STATUS_ICONS[state] || STATUS_ICONS.NO_SIGNAL}</svg>`;
+}
+
+function waveformSamples(values) {
+  if (!Array.isArray(values) || values.length < 2) return null;
+  const samples = values.map(Number);
+  if (!samples.every(Number.isFinite)) return null;
+  const count = Math.min(samples.length, 96);
+  return Array.from({length:count}, (_, i) => Math.max(-1, Math.min(1,
+    samples[Math.round(i * (samples.length - 1) / (count - 1))])));
+}
+
+function audioGraph(z, stale) {
+  const samples = stale ? null : waveformSamples(z.audio_waveform);
+  const path = samples?.map((sample, i) => `${i ? 'L' : 'M'}${(i * 240 / (samples.length - 1)).toFixed(1)} ${(42 - sample * 35).toFixed(1)}`).join(' ');
+  const score = z.scream_score === null || z.scream_score === undefined ? NaN : Number(z.scream_score);
+  const hasScore = !stale && Number.isFinite(score) && score >= 0 && score <= 1;
+  return `<div class="audio-panel">
+    <div class="audio-heading"><span>Microphone waveform</span><strong>${samples ? 'Latest window' : 'No waveform'}</strong></div>
+    <div class="waveform" role="img" aria-label="${samples ? 'Microphone waveform for zone ' + escapeHtml(z.zone) : 'No waveform samples available'}">
+      <svg viewBox="0 0 240 84" preserveAspectRatio="none" aria-hidden="true"><line x1="0" y1="42" x2="240" y2="42"/>${path ? `<path d="${path}"/>` : ''}</svg>
+      ${samples ? '' : '<span class="waveform-empty">Awaiting waveform samples</span>'}
+    </div>
+    <div class="audio-result"><span>Scream model score</span><strong class="${hasScore ? 'has-score' : ''}">${hasScore ? `${Math.round(score * 100)}%` : 'No model output'}</strong></div>
+  </div>`;
+}
+
+function spatialHeatmap(data) {
+  if (!data || typeof data !== 'object') return null;
+  const {width, height, values} = data;
+  if (!Number.isInteger(width) || !Number.isInteger(height) || width < 4 || width > 32 ||
+      height < 3 || height > 24 || !Array.isArray(values) || values.length !== width * height) return null;
+  const cells = values.map(Number);
+  if (!cells.every(value => Number.isFinite(value) && value >= 0 && value <= 1)) return null;
+  return {width, height, values:cells};
+}
+
+function renderHeatmap(now) {
+  const source = [...zones.values()]
+    .filter(z => now - Date.parse(z.ts) <= STALE_MS && spatialHeatmap(z.spatial_heatmap))
+    .sort((a,b) => Date.parse(b.ts) - Date.parse(a.ts))[0] || null;
+  if (source === renderedHeatmapSource) return;
+  renderedHeatmapSource = source;
+  const map = source ? spatialHeatmap(source.spatial_heatmap) : {width:16, height:7, values:Array(16 * 7).fill(0)};
+  heatmapGrid.style.setProperty('--cols', String(map.width));
+  heatmapGrid.innerHTML = map.values.map(value =>
+    `<span class="heatmap-cell" style="--intensity:${(0.04 + value * 0.9).toFixed(2)}"></span>`).join('');
+  heatmapGrid.setAttribute('aria-label', source ? 'Incoming CSI environmental-change heatmap' : 'No spatial heatmap data');
+  heatmapEmpty.hidden = !!source;
+  heatmapStatus.textContent = source ? 'Map data received' : 'Awaiting map data';
+  heatmapSource.textContent = source ? 'Latest spatial reading' : 'No spatial feed connected';
+  heatmapNote.textContent = source
+    ? 'Incoming map values are shown as provided; verify calibration before using them.'
+    : 'A motion score from each zone cannot locate activity within the scene.';
+}
 
 function render() {
   emptyEl.style.display = zones.size ? 'none' : 'block';
@@ -72,22 +285,25 @@ function render() {
       const age = now - new Date(z.ts).getTime();
       const stale = age > STALE_MS;
       const pct = Math.min(100, (z.motion / 2) * 100);
-      return `<div class="zone ${z.state} ${stale ? 'stale' : ''}">
-        <h2>${z.name}</h2>
-        <div class="state ${z.state}">${stale ? 'NO SIGNAL' : z.state}</div>
-        <div class="bar"><span style="width:${pct}%"></span></div>
-        <div class="meta">
-          <span>motion ${z.motion.toFixed(2)}</span>
-          <span>audio ${z.audio_db} dB</span>
-          <span>${z.rssi} dBm</span>
-          <span>${(age/1000).toFixed(1)}s ago</span>
-        </div></div>`;
+      return `<article class="zone ${escapeHtml(z.state)} ${stale ? 'stale' : ''}">
+        <div class="zone-head"><span class="zone-id">ZONE ${escapeHtml(z.zone)}</span><h3>${escapeHtml(z.name)}</h3></div>
+        <div class="zone-status">${statusIcon(stale ? 'NO_SIGNAL' : z.state)}<span class="state">${stale ? 'NO SIGNAL' : escapeHtml(z.state)}</span></div>
+        <div class="motion-row"><span>Motion index</span><strong>${z.motion.toFixed(2)}</strong></div>
+        <div class="bar" role="progressbar" aria-label="Motion index" aria-valuemin="0" aria-valuemax="2" aria-valuenow="${z.motion}"><span style="width:${pct}%"></span></div>
+        ${audioGraph(z, stale)}
+        <dl class="readings"><div><dt>Audio level</dt><dd>${z.audio_db} dB</dd></div>
+          <div><dt>Signal</dt><dd>${z.rssi} dBm</dd></div>
+          <div><dt>Battery</dt><dd>${z.battery_pct ?? '—'}${z.battery_pct == null ? '' : '%'}</dd></div></dl>
+        <div class="zone-footer">${stale ? 'Waiting for a new reading' : `Updated ${(age/1000).toFixed(1)}s ago`}</div>
+      </article>`;
     }).join('');
+  renderHeatmap(now);
 }
 
 function setSession(id) {
   session = id;
   toggle.textContent = id ? 'Stop session' : 'Start session';
+  toggle.classList.toggle('is-recording', !!id);
   labelEl.disabled = !!id;
 }
 

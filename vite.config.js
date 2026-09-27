@@ -1,13 +1,13 @@
 import { defineConfig } from 'vite';
 import { resolve } from 'path';
 
-// Build the same dashboard that the Python backend serves.
+// The landing page links to the root dashboard, which connects to Railway directly.
 export default defineConfig({
   build: {
     rollupOptions: {
       input: {
         main: resolve(__dirname, 'index.html'),
-        dashboard: resolve(__dirname, 'backend/static/dashboard.html'),
+        dashboard: resolve(__dirname, 'dashboard.html'),
       },
     },
   },
