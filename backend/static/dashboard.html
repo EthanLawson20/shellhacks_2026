@@ -29,13 +29,25 @@
   .header-meta { display:flex; align-items:center; gap:26px; }
   .header-label,.section-index,.input-label { font-size:13px; font-weight:600; letter-spacing:.04em; }
   .header-label { color:var(--muted); }
+  .visually-hidden { position:absolute; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden; clip:rect(0,0,0,0); white-space:nowrap; border:0; }
   .status { display:flex; align-items:center; gap:10px; min-width:130px; padding:8px 12px;
             border:1px solid var(--line); border-radius:4px; color:var(--muted); font-size:13px; }
   .dot { display:inline-block; width:8px; height:8px; flex:0 0 8px; border-radius:50%;
          background:var(--white); opacity:.55; }
   .dot.ok { background:var(--green); opacity:1; box-shadow:0 0 0 5px rgba(184,244,107,.12); }
+  .live-panel { display:grid; grid-template-columns:minmax(0,1fr) minmax(290px,470px); gap:28px 42px;
+                align-items:end; padding:55px 0 32px; border-bottom:1px solid var(--line); }
+  .live-panel h1 { margin:0 0 6px; font-size:clamp(25px,3vw,34px); font-weight:500; letter-spacing:-.04em; }
+  .live-panel p { max-width:620px; margin:0; color:var(--muted); font-size:14px; }
+  .live-controls { display:flex; align-items:end; gap:10px; }
+  .live-controls .input-wrap { flex:1; min-width:0; }
+  .live-feedback { grid-column:1/-1; display:flex; flex-wrap:wrap; gap:8px 30px;
+                   padding:17px 0 0; border-top:1px solid var(--line); color:var(--muted); font-size:13px; }
+  .live-feedback strong { color:var(--white); font-weight:500; }
+  .live-panel button.is-active { background:transparent; border-color:var(--line); color:var(--white); }
+  .live-panel button.is-active:hover { border-color:var(--white); }
   .demo-panel { display:flex; align-items:center; justify-content:space-between; gap:28px;
-                padding:60px 0 32px; border-bottom:1px solid var(--line); }
+                padding:32px 0; border-bottom:1px solid var(--line); }
   .demo-panel h1 { margin:0 0 5px; font-size:clamp(25px,3vw,34px); font-weight:500; letter-spacing:-.04em; }
   .demo-panel p { margin:0; color:var(--muted); font-size:14px; }
   .demo-panel button { flex:0 0 auto; }
@@ -134,10 +146,12 @@
   .site-footer { padding:26px 0; border-top:1px solid var(--line); color:var(--muted); font-size:13px; }
   .footer-inner { display:flex; justify-content:space-between; gap:20px; }
   @media(max-width:900px) {
+    .live-panel { grid-template-columns:1fr; gap:20px; }
     .session-panel { align-items:start; flex-direction:column; }
     .session-area,.session-controls { width:100%; } .input-wrap { flex:1; } }
   @media(max-width:600px) { .shell { width:min(100% - 36px,1320px); }
     .header-inner { min-height:72px; } .header-label { display:none; }
+    .live-panel { padding-top:42px; }.live-controls { align-items:stretch; flex-direction:column; }
     .demo-panel { align-items:stretch; flex-direction:column; gap:16px; padding-top:42px; }.demo-panel button { width:100%; }
     .session-panel { margin:20px 0 60px; padding:22px; }.session-controls { align-items:stretch; flex-direction:column; }
     .input-wrap,button { width:100%; } .section-index { display:none; } .zone-section { padding-bottom:76px; }
@@ -155,11 +169,20 @@
       <svg class="brand-mark" viewBox="0 0 40 40" aria-hidden="true"><path d="M7 28 15 9 32 13 34 30 20 35 7 28 32 13M15 9 20 35M7 28 34 30"/><circle cx="7" cy="28" r="3"/><circle cx="15" cy="9" r="3"/><circle cx="32" cy="13" r="3"/><circle cx="34" cy="30" r="3"/><circle cx="20" cy="35" r="3"/></svg>
       <span>PHASE</span>
     </a>
-    <div class="header-meta"><span class="header-label">Operations</span><span class="status"><span class="dot" id="dot"></span><span id="conn">Connecting</span></span></div>
+    <div class="header-meta"><span class="header-label">Operations</span><span class="status" role="status"><span class="dot" id="dot"></span><span id="conn">Not connected</span></span></div>
   </div>
 </header>
 
 <main class="shell">
+  <section class="live-panel" aria-labelledby="live-title">
+    <div><h1 id="live-title">Connect live data</h1><p>Connect to the Phase backend to see readings forwarded from the gateway. The connection can be open even while no nodes are reporting.</p></div>
+    <div class="live-controls">
+      <label class="input-wrap"><span class="input-label">Backend URL</span><input id="live-url" type="url" inputmode="url" spellcheck="false" autocomplete="url" placeholder="https://your-backend.example.com" aria-describedby="live-help"></label>
+      <button id="live-toggle" type="button" aria-pressed="false">Connect live</button>
+    </div>
+    <div class="live-feedback" aria-live="polite"><span><strong>Connection:</strong> <span id="live-connection">Not connected</span></span><span><strong>Sensor feed:</strong> <span id="live-feed">Waiting for connection</span></span></div>
+    <p id="live-help" class="visually-hidden">Leave blank to try this website's host, or enter the root URL of the running Phase backend.</p>
+  </section>
   <section class="demo-panel" aria-label="Sample data preview">
     <div><h1>Preview incoming data</h1><p>Watch sample zone readings arrive and change. Demo data stays in this browser and is never recorded.</p></div>
     <button id="demo-toggle" type="button" aria-pressed="false">Start demo data</button>
@@ -189,9 +212,10 @@ const zonesEl = document.getElementById('zones');
 const emptyEl = document.getElementById('empty');
 const connEl  = document.getElementById('conn');
 const dotEl   = document.getElementById('dot');
-const toggle  = document.getElementById('toggle');
-const labelEl = document.getElementById('label');
-const actionMessageEl = document.getElementById('action-message');
+const liveUrlInput = document.getElementById('live-url');
+const liveToggle = document.getElementById('live-toggle');
+const liveConnection = document.getElementById('live-connection');
+const liveFeed = document.getElementById('live-feed');
 const demoToggle = document.getElementById('demo-toggle');
 const demoNotice = document.getElementById('demo-notice');
 const heatmapGrid = document.getElementById('heatmap-grid');
@@ -202,10 +226,14 @@ const heatmapNote = document.getElementById('heatmap-note');
 
 const zones = new Map();      // zone letter -> latest reading
 const liveZones = new Map();  // continue collecting real readings while the preview is open
-let session = null;
 let demoActive = false;
 let demoTimer = null;
 let demoStep = 0;
+let liveWanted = false;
+let liveSocket = null;
+let retryTimer = null;
+let connectTimer = null;
+let connectionAttempt = 0;
 let renderedHeatmapKey = '';
 let heatmapRevision = 0;
 let liveHeatmap = null;
@@ -342,15 +370,6 @@ function render() {
   renderHeatmap(now);
 }
 
-function setSession(id) {
-  session = id;
-  toggle.textContent = id ? 'Stop session' : 'Start session';
-  toggle.classList.toggle('is-recording', !!id);
-  labelEl.disabled = !!id;
-  actionMessageEl.textContent = '';
-  toggle.disabled = demoActive && !id;
-}
-
 function applyLiveReading(data) {
   liveZones.set(data.zone, data);
   const map = spatialHeatmap(data.spatial_heatmap);
@@ -403,43 +422,82 @@ demoToggle.onclick = () => {
     for (const [zone, data] of liveZones) zones.set(zone, data);
     render();
   }
-  toggle.disabled = demoActive && !session;
 };
 
-toggle.onclick = async () => {
-  toggle.disabled = true;
-  actionMessageEl.textContent = '';
-  try {
-    const stopping = !!session;
-    const response = await fetch(stopping ? '/api/session/stop' : '/api/session/start', stopping
-      ? { method: 'POST' }
-      : { method: 'POST', headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ label: labelEl.value || null }) });
-    if (!response.ok) throw new Error(`Session request failed: ${response.status}`);
-  } catch (error) {
-    actionMessageEl.textContent = session ? 'Could not stop the session. Try again.' : 'Could not start a session. Check the connection and try again.';
-    console.warn(error);
-  } finally {
-    toggle.disabled = demoActive && !session;
+function setLiveStatus(header, detail, connected = false) {
+  connEl.textContent = header;
+  liveConnection.textContent = detail;
+  dotEl.classList.toggle('ok', connected);
+}
+
+function socketUrlForBackend(value) {
+  const base = new URL(value.trim() || location.origin);
+  if (!['http:', 'https:'].includes(base.protocol) || base.username || base.password || base.search || base.hash) {
+    throw new Error('Enter a backend URL beginning with http:// or https://, without a query or login.');
   }
-};
+  if (location.protocol === 'https:' && base.protocol !== 'https:') {
+    throw new Error('This page requires an HTTPS backend for a secure live connection.');
+  }
+  base.protocol = base.protocol === 'https:' ? 'wss:' : 'ws:';
+  base.pathname = `${base.pathname.replace(/\/+$/, '')}/ws/live`;
+  return base.href;
+}
 
-function connect() {
-  const proto = location.protocol === 'https:' ? 'wss' : 'ws';
-  const ws = new WebSocket(`${proto}://${location.host}/ws/live`);
-
-  ws.onopen = () => { connEl.textContent = 'Connected'; dotEl.classList.add('ok'); };
-  ws.onclose = () => {
-    connEl.textContent = 'Reconnecting';
-    dotEl.classList.remove('ok');
-    setTimeout(connect, 2000);
+let liveEndpoint = '';
+function connectLive() {
+  if (!liveWanted) return;
+  const attempt = ++connectionAttempt;
+  setLiveStatus('Connecting', 'Opening the backend live feed…');
+  liveFeed.textContent = 'Waiting for connection';
+  let ws;
+  try {
+    ws = new WebSocket(liveEndpoint);
+  } catch (error) {
+    setLiveStatus('Unavailable', 'Could not open the live connection.');
+    liveFeed.textContent = 'Check the backend URL';
+    liveWanted = false;
+    liveUrlInput.disabled = false;
+    liveToggle.textContent = 'Connect live';
+    liveToggle.classList.remove('is-active');
+    liveToggle.setAttribute('aria-pressed', 'false');
+    console.warn(error);
+    return;
+  }
+  liveSocket = ws;
+  let verified = false;
+  connectTimer = setTimeout(() => {
+    if (ws.readyState === WebSocket.CONNECTING) ws.close();
+  }, 8000);
+  ws.onopen = () => {
+    if (attempt !== connectionAttempt) return;
+    clearTimeout(connectTimer);
+    setLiveStatus('Verifying', 'Socket open; waiting for the Phase backend snapshot.');
+    connectTimer = setTimeout(() => {
+      if (!verified && ws.readyState === WebSocket.OPEN) ws.close();
+    }, 5000);
   };
-  ws.onmessage = (e) => {
-    const msg = JSON.parse(e.data);
-    if (msg.type === 'snapshot') {
+  ws.onclose = () => {
+    clearTimeout(connectTimer);
+    if (attempt !== connectionAttempt || !liveWanted) return;
+    liveSocket = null;
+    setLiveStatus('Reconnecting', verified
+      ? 'Live feed interrupted; trying again in 3 seconds.'
+      : 'No Phase backend response; check the URL. Retrying in 3 seconds.');
+    liveFeed.textContent = 'Waiting for connection';
+    retryTimer = setTimeout(connectLive, 3000);
+  };
+  ws.onmessage = event => {
+    if (attempt !== connectionAttempt) return;
+    let msg;
+    try { msg = JSON.parse(event.data); } catch { return; }
+    if (msg.type === 'snapshot' && Array.isArray(msg.zones)) {
+      verified = true;
+      clearTimeout(connectTimer);
+      setLiveStatus('Connected', 'Phase backend connected.', true);
       liveZones.clear();
       liveHeatmap = null;
       msg.zones.forEach(z => {
+        if (!z || !z.zone) return;
         liveZones.set(z.zone, z);
         const map = spatialHeatmap(z.spatial_heatmap);
         if (map && (!liveHeatmap || Date.parse(z.ts) > Date.parse(liveHeatmap.ts))) {
@@ -450,17 +508,55 @@ function connect() {
         zones.clear();
         for (const [zone, data] of liveZones) zones.set(zone, data);
       }
-      setSession(msg.session);
-    } else if (msg.type === 'reading') {
+      const fresh = msg.zones.filter(z => z && Date.now() - Date.parse(z.received_at || z.ts) <= STALE_MS);
+      liveFeed.textContent = fresh.length
+        ? `Receiving readings from ${fresh.map(z => `Zone ${z.zone}`).join(', ')}`
+        : 'Connected; waiting for fresh node readings';
+    } else if (msg.type === 'reading' && msg.data?.zone) {
       applyLiveReading(msg.data);
-    } else if (msg.type === 'session') {
-      setSession(msg.session);
+      liveFeed.textContent = `Latest: Zone ${msg.data.zone} at ${new Date().toLocaleTimeString()}`;
     }
     render();
   };
 }
 
-connect();
+function disconnectLive() {
+  liveWanted = false;
+  connectionAttempt++;
+  clearTimeout(retryTimer);
+  clearTimeout(connectTimer);
+  if (liveSocket) liveSocket.close();
+  liveSocket = null;
+  liveUrlInput.disabled = false;
+  liveToggle.textContent = 'Connect live';
+  liveToggle.classList.remove('is-active');
+  liveToggle.setAttribute('aria-pressed', 'false');
+  setLiveStatus('Not connected', 'Live connection stopped.');
+  liveFeed.textContent = 'Waiting for connection';
+  liveZones.clear();
+  liveHeatmap = null;
+  if (!demoActive) zones.clear();
+  render();
+}
+
+liveUrlInput.value = location.origin.startsWith('http') ? location.origin : '';
+liveToggle.onclick = () => {
+  if (liveWanted) { disconnectLive(); return; }
+  try {
+    liveEndpoint = socketUrlForBackend(liveUrlInput.value);
+  } catch (error) {
+    setLiveStatus('Invalid URL', error.message);
+    return;
+  }
+  if (demoActive) demoToggle.click();
+  liveWanted = true;
+  liveUrlInput.disabled = true;
+  liveToggle.textContent = 'Disconnect live';
+  liveToggle.classList.add('is-active');
+  liveToggle.setAttribute('aria-pressed', 'true');
+  connectLive();
+};
+
 setInterval(render, 500);   // keeps the "Xs ago" and stale flags moving
 </script>
 </body>
