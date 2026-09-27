@@ -1,4 +1,5 @@
 import json
+import joblib
 import matplotlib.pyplot as plt
 import numpy as np
 import seaborn as sns
@@ -97,6 +98,13 @@ def main():
     model = build_model(len(FEATURE_NAMES), len(encoder.classes_))
     train_model(model, X_train, y[train_indices], 8)
     model.save('csi_model.keras')
+    # Persist the fitted scaler and class order so the saved model is usable at
+    # inference time — raw features must be scaled identically and prediction
+    # indices mapped back to labels the same way they were during training.
+    joblib.dump(
+        {"scaler": scaler, "classes": encoder.classes_.tolist()},
+        "csi_model_meta.joblib",
+    )
     prediction_probabilities = model.predict(X_test, verbose=0)
     predicted_labels = np.argmax(prediction_probabilities, axis=1)
     class_indices = np.arange(len(encoder.classes_))

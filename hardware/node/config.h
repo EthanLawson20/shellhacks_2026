@@ -45,8 +45,6 @@
 #define BATTERY_INTERVAL_MS     5000
 #define SIGNAL_VIEW_MAX_LINES_PER_S 20
 
-// node is an AP now so there's nothing to reconnect to. kept only because other
-// code still references them.
 #define WIFI_CONNECT_TIMEOUT_MS 15000
 #define WIFI_RETRY_INTERVAL_MS  3000
 #define NO_CSI_TIMEOUT_MS       60000
