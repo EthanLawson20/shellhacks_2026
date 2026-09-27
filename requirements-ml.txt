@@ -1,0 +1,6 @@
+# Dependencies for the activity-classification pipeline (fetch_dataset.py,
+# train_activity.py). Kept separate from backend/requirements.txt on purpose —
+# the Railway backend should not ship scikit-learn.
+numpy
+scikit-learn
+joblib

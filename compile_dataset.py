@@ -86,6 +86,25 @@ def _records_from_payload(
 
 	return records
 
+# Write the collected samples out as a JSON dataset at the given path.
+def _save_dataset(
+	output_path: Path, label: str, started_at: str, samples: list[dict[str, Any]]
+) -> None:
+	dataset = {
+		"format": "shellhacks-csi-dataset",
+		"version": 1,
+		"created_at": started_at,
+		"label": label,
+		"sample_count": len(samples),
+		"samples": samples,
+	}
+	output_path.parent.mkdir(parents=True, exist_ok=True)
+	with output_path.open("w", encoding="utf-8") as output_file:
+		json.dump(dataset, output_file, indent=2)
+		output_file.write("\n")
+	print(f"\nSaved {len(samples)} sample(s) to {output_path}")
+
+
 # Compile all collected samples into a json dataset and save it to the specified output path.
 def collect_dataset(
 	output_path: Path,
@@ -117,20 +136,75 @@ def collect_dataset(
 	except KeyboardInterrupt:
 		print("\nCollection interrupted; saving collected samples.")
 
-	dataset = {
-		"format": "shellhacks-csi-dataset",
-		"version": 1,
-		"created_at": started_at,
-		"label": label,
-		"sample_count": len(samples),
-		"samples": samples,
-	}
-	output_path.parent.mkdir(parents=True, exist_ok=True)
-	with output_path.open("w", encoding="utf-8") as output_file:
-		json.dump(dataset, output_file, indent=2)
-		output_file.write("\n")
-	print(f"\nSaved {len(samples)} sample(s) to {output_path}")
+	_save_dataset(output_path, label, started_at, samples)
 	return len(samples)
+
+# Collect CSI straight off a node's USB serial. The node must be flashed with
+# SIGNAL_VIEW = 1, which streams one JSON line per CSI packet:
+#   {"csi":[52 amplitudes],"m":<motion score>,"p":<presence 0|1>}
+def collect_dataset_serial(
+	output_path: Path,
+	label: str,
+	duration: float,
+	max_samples: int | None,
+	port: str,
+	baud: int,
+) -> int:
+	try:
+		import serial  # pyserial
+	except ImportError as error:
+		raise SystemExit("Serial mode needs pyserial:  pip install pyserial") from error
+
+	samples: list[dict[str, Any]] = []
+	started_at = _utc_now()
+	stop_at = time.monotonic() + duration
+	connection = serial.Serial(port, baud, timeout=1.0)
+	print(f"Reading CSI from {port} at {baud} baud; label={label!r}")
+	try:
+		while time.monotonic() < stop_at:
+			raw = connection.readline()
+			if not raw:
+				continue							# read timeout, just loop
+			text = raw.decode("utf-8", errors="replace").strip()
+			if not text or text[0] != "{":
+				continue							# firmware chatter like [NODE]/[CSI]
+			try:
+				line = json.loads(text)
+			except json.JSONDecodeError:
+				continue							# partial line, ignore
+			if not isinstance(line, dict) or "csi" not in line:
+				continue							# e.g. {"gw":"ready"}, not a CSI line
+
+			collected_at = _utc_now()
+			payload = {"csi_amplitude": line["csi"], "timestamp": collected_at}
+			try:
+				rows = _records_from_payload(payload, label, collected_at)
+			except (ValueError, TypeError) as error:
+				print(f"skipped a bad CSI line: {error}")
+				continue
+
+			# keep the node's own motion score / presence flag as labels
+			for row in rows:
+				if "m" in line:
+					row["motion"] = line["m"]
+				if "p" in line:
+					row["presence"] = int(line["p"])
+
+			if max_samples is not None:
+				rows = rows[: max_samples - len(samples)]
+			samples.extend(rows)
+			if rows:
+				print(f"Collected {len(samples)} sample(s)", end="\r")
+			if max_samples is not None and len(samples) >= max_samples:
+				break
+	except KeyboardInterrupt:
+		print("\nCollection interrupted; saving collected samples.")
+	finally:
+		connection.close()
+
+	_save_dataset(output_path, label, started_at, samples)
+	return len(samples)
+
 
 # Runs the dataset collection process based on command-line arguments, handling any errors and saving collected samples.
 def main() -> None:
@@ -147,14 +221,27 @@ def main() -> None:
 		help="seconds between endpoint polls",
 	)
 	parser.add_argument("--max-samples", type=int)
+	parser.add_argument(
+		"--serial",
+		help="read CSI from a node's USB serial (firmware built with SIGNAL_VIEW=1), "
+		"e.g. COM5 or /dev/ttyUSB0. Overrides the Railway endpoint.",
+	)
+	parser.add_argument("--baud", type=int, default=115200, help="serial baud rate")
 	args = parser.parse_args()
 
-	if args.duration <= 0 or args.interval <= 0:
-		parser.error("--duration and --interval must be greater than zero")
+	if args.duration <= 0:
+		parser.error("--duration must be greater than zero")
+	if not args.serial and args.interval <= 0:
+		parser.error("--interval must be greater than zero")
 	if args.max_samples is not None and args.max_samples < 1:
 		parser.error("--max-samples must be at least one")
 
-	collect_dataset(args.output, args.label, args.duration, args.interval, args.max_samples)
+	if args.serial:
+		collect_dataset_serial(
+			args.output, args.label, args.duration, args.max_samples, args.serial, args.baud
+		)
+	else:
+		collect_dataset(args.output, args.label, args.duration, args.interval, args.max_samples)
 
 
 if __name__ == "__main__":

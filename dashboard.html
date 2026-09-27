@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PHASE — live zones</title>
+<style>
+  :root { --bg:#12171d; --card:#1b232c; --line:#2b3642; --text:#e6edf3;
+          --dim:#8b9aa9; --clear:#3fb950; --presence:#d29922; --moving:#f85149; }
+  * { box-sizing:border-box; }
+  body { margin:0; background:var(--bg); color:var(--text);
+         font:15px/1.5 system-ui,-apple-system,sans-serif; padding:24px; }
+  header { display:flex; align-items:center; gap:16px; flex-wrap:wrap; margin-bottom:24px; }
+  h1 { font-size:20px; margin:0; letter-spacing:.02em; }
+  .status { font-size:13px; color:var(--dim); }
+  .dot { display:inline-block; width:8px; height:8px; border-radius:50%;
+         background:var(--moving); margin-right:6px; }
+  .dot.ok { background:var(--clear); }
+  button { background:var(--card); color:var(--text); border:1px solid var(--line);
+           border-radius:6px; padding:7px 14px; font-size:14px; cursor:pointer; }
+  button:hover { border-color:var(--dim); }
+  input { background:var(--card); color:var(--text); border:1px solid var(--line);
+          border-radius:6px; padding:7px 10px; font-size:14px; }
+  .zones { display:grid; gap:16px; grid-template-columns:repeat(auto-fill,minmax(260px,1fr)); }
+  .zone { background:var(--card); border:1px solid var(--line); border-left-width:4px;
+          border-radius:8px; padding:16px; }
+  .zone.CLEAR { border-left-color:var(--clear); }
+  .zone.PRESENCE { border-left-color:var(--presence); }
+  .zone.MOVING { border-left-color:var(--moving); }
+  .zone.stale { opacity:.45; border-left-color:var(--dim); }
+  .zone h2 { margin:0 0 4px; font-size:16px; }
+  .state { font-size:22px; font-weight:600; margin:8px 0; }
+  .state.CLEAR{color:var(--clear)} .state.PRESENCE{color:var(--presence)}
+  .state.MOVING{color:var(--moving)}
+  .bar { height:6px; background:#0d1117; border-radius:3px; overflow:hidden; margin:10px 0; }
+  .bar span { display:block; height:100%; background:var(--presence); transition:width .2s; }
+  .meta { display:flex; gap:14px; font-size:12px; color:var(--dim); flex-wrap:wrap; }
+  .empty { color:var(--dim); padding:40px 0; text-align:center; }
+</style>
+</head>
+<body>
+<header>
+  <h1>PHASE</h1>
+  <span class="status"><span class="dot" id="dot"></span><span id="conn">connecting…</span></span>
+  <span style="flex:1"></span>
+  <input id="label" placeholder="session label">
+  <button id="toggle">Start session</button>
+</header>
+
+<div class="zones" id="zones"></div>
+<div class="empty" id="empty">Waiting for the first packet…</div>
+
+<script>
+const API = 'https://shellhacks2026-production.up.railway.app';
+
+const zonesEl = document.getElementById('zones');
+const emptyEl = document.getElementById('empty');
+const connEl  = document.getElementById('conn');
+const dotEl   = document.getElementById('dot');
+const toggle  = document.getElementById('toggle');
+const labelEl = document.getElementById('label');
+
+const zones = new Map();
+let session = null;
+const STALE_MS = 3000;   // nodes report twice a second so 3s of quiet means something broke
+
+function render() {
+  emptyEl.style.display = zones.size ? 'none' : 'block';
+  const now = Date.now();
+  zonesEl.innerHTML = [...zones.values()].sort((a,b) => a.zone.localeCompare(b.zone))
+    .map(z => {
+      const age = now - new Date(z.ts).getTime();
+      const stale = age > STALE_MS;
+      const pct = Math.min(100, (z.motion / 2) * 100);
+      return `<div class="zone ${z.state} ${stale ? 'stale' : ''}">
+        <h2>${z.name}</h2>
+        <div class="state ${z.state}">${stale ? 'NO SIGNAL' : z.state}</div>
+        <div class="bar"><span style="width:${pct}%"></span></div>
+        <div class="meta">
+          <span>motion ${z.motion.toFixed(2)}</span>
+          <span>audio ${z.audio_db} dB</span>
+          <span>${z.rssi} dBm</span>
+          <span>${(age/1000).toFixed(1)}s ago</span>
+        </div></div>`;
+    }).join('');
+}
+
+function setSession(id) {
+  session = id;
+  toggle.textContent = id ? 'Stop session' : 'Start session';
+  labelEl.disabled = !!id;
+}
+
+toggle.onclick = async () => {
+  if (session) {
+    await fetch(`${API}/api/session/stop`, { method: 'POST' });
+  } else {
+    await fetch(`${API}/api/session/start`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ label: labelEl.value || null })
+    });
+  }
+};
+
+function connect() {
+  const ws = new WebSocket(API.replace('https://', 'wss://') + '/ws/live');
+
+  ws.onopen = () => { connEl.textContent = 'live'; dotEl.classList.add('ok'); };
+  ws.onclose = () => {
+    connEl.textContent = 'disconnected — retrying';
+    dotEl.classList.remove('ok');
+    setTimeout(connect, 2000);
+  };
+  ws.onmessage = (e) => {
+    const msg = JSON.parse(e.data);
+    if (msg.type === 'snapshot') {
+      msg.zones.forEach(z => zones.set(z.zone, z));
+      setSession(msg.session);
+    } else if (msg.type === 'reading') {
+      zones.set(msg.data.zone, msg.data);
+    } else if (msg.type === 'session') {
+      setSession(msg.session);
+    }
+    render();
+  };
+}
+
+connect();
+setInterval(render, 500);   // keeps the "Xs ago" counters ticking
+</script>
+</body>
+</html>
