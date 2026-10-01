@@ -7,11 +7,14 @@ backend is polled once and each view stays aligned to the same sensor window.
     python monitor_live.py --url http://localhost:8000 --window 20
 """
 import argparse
+import json
 import os
 import sys
 import time
 from collections import deque
 from datetime import datetime
+from urllib.parse import quote
+from urllib.request import Request, urlopen
 
 from audio_model import preprocess_db_readings
 from classify_audio_live import _load_db_model
@@ -38,6 +41,22 @@ def _enable_ansi() -> None:
 		os.system("")
 
 
+def _push_prediction(push_url: str, token: str, prediction: dict) -> None:
+	"""POST one zone's prediction to the backend; never raise."""
+	try:
+		url = f"{push_url.rstrip('/')}/api/prediction"
+		if token:
+			url += f"?token={quote(token)}"
+		body = json.dumps(prediction).encode("utf-8")
+		request = Request(
+			url, data=body, method="POST",
+			headers={"Content-Type": "application/json"},
+		)
+		urlopen(request, timeout=5.0).close()
+	except Exception as error:
+		print(f"[push] {prediction.get('zone')} failed: {error}", file=sys.stderr)
+
+
 def _zone_lines(
 	zone: dict,
 	buffer: deque,
@@ -46,14 +65,14 @@ def _zone_lines(
 	db_threshold: float,
 	csi_threshold: float,
 	audio_threshold: float,
-) -> str:
+) -> tuple[str, dict | None]:
 	zone_id = zone.get("zone")
 	name = zone.get("name") or f"Zone {zone_id}"
 	if zone.get("stale"):
-		return f"  {name:<14} CSI: FEED STALE | AUDIO: FEED STALE | ACTIVITY: --"
+		return f"  {name:<14} CSI: FEED STALE | AUDIO: FEED STALE | ACTIVITY: --", None
 	if len(buffer) < window:
 		warming = f"warming up {len(buffer)}/{window}"
-		return f"  {name:<14} CSI: {warming:<21} | AUDIO: {warming:<21} | ACTIVITY: --"
+		return f"  {name:<14} CSI: {warming:<21} | AUDIO: {warming:<21} | ACTIVITY: --", None
 
 	readings = list(buffer)
 	activity, probabilities = classify_zone(readings)
@@ -63,6 +82,15 @@ def _zone_lines(
 		activity_text = f"uncertain {activity} {activity_confidence:.0%}; active {p_active:.0%}"
 	else:
 		activity_text = f"{activity} {activity_confidence:.0%}; active {p_active:.0%}"
+
+	prediction = {
+		"zone": zone_id,
+		"csi_class": str(activity),
+		"csi_probs": {str(k): float(v) for k, v in probabilities.items()},
+		"audio_class": None,
+		"audio_prob": None,
+		"activity_score": None,
+	}
 
 	audio_readings = sum(item.get("audio_db") is not None for item in readings)
 	if audio_readings < window:
@@ -77,13 +105,18 @@ def _zone_lines(
 		label = "LOUD" if loud_probability >= audio_threshold else "not loud"
 		audio_text = f"{label} p(loud)={loud_probability:.0%}"
 		level_text = str(zone.get("audio_db", "?"))
-		activity_score_text = f"{fuse_activity_score(probabilities, loud_probability):.0f}/100"
+		activity_score = fuse_activity_score(probabilities, loud_probability)
+		activity_score_text = f"{activity_score:.0f}/100"
+		prediction["audio_class"] = label
+		prediction["audio_prob"] = loud_probability
+		prediction["activity_score"] = activity_score
 
-	return (
+	line = (
 		f"  {name:<14} CSI: {activity_text:<38} "
 		f"AUDIO: {audio_text:<23} dB:{level_text:<3} "
 		f"ACTIVITY: {activity_score_text}"
 	)
+	return line, prediction
 
 
 def _render(
@@ -96,6 +129,8 @@ def _render(
 	db_threshold: float,
 	csi_threshold: float,
 	audio_threshold: float,
+	push_url: str,
+	token: str,
 ) -> None:
 	now = datetime.now().strftime("%H:%M:%S")
 	lines = [
@@ -114,10 +149,13 @@ def _render(
 		for zone in sorted(zones, key=lambda item: str(item.get("zone"))):
 			zone_id = zone.get("zone")
 			buffer = buffers.get(zone_id, deque())
-			lines.append(_zone_lines(
+			line, prediction = _zone_lines(
 				zone, buffer, window, context, db_threshold,
 				csi_threshold, audio_threshold,
-			))
+			)
+			lines.append(line)
+			if prediction is not None:
+				_push_prediction(push_url, token, prediction)
 	lines.extend(("", "Ctrl+C to quit."))
 	print("\n".join(lines), flush=True)
 
@@ -128,6 +166,8 @@ def run(
 	interval: float,
 	csi_threshold: float,
 	audio_threshold: float,
+	push_url: str,
+	token: str,
 ) -> None:
 	global _audio_model
 	_, _, classes = _ensure_loaded()
@@ -159,7 +199,7 @@ def run(
 
 		_render(
 			url, status, zones, buffers, window, context, db_threshold,
-			csi_threshold, audio_threshold,
+			csi_threshold, audio_threshold, push_url, token,
 		)
 		time.sleep(2.0 if status != "connected" else interval)
 
@@ -181,6 +221,11 @@ def main() -> None:
 					help="minimum CSI activity confidence (default: 0.6)")
 	parser.add_argument("--audio-threshold", type=float, default=AUDIO_THRESHOLD,
 					help="minimum loudness probability (default: 0.5)")
+	parser.add_argument("--push-url", default=None,
+					help="backend base URL to POST predictions to (default: same as --url)")
+	parser.add_argument("--token", default=os.environ.get("GHOST_INGEST_TOKEN", ""),
+					help="ingest token sent with pushed predictions "
+						"(default: $GHOST_INGEST_TOKEN)")
 	args = parser.parse_args()
 	if args.window < 2:
 		parser.error("--window must be at least 2")
@@ -192,7 +237,8 @@ def main() -> None:
 		parser.error("--audio-threshold must be between 0 and 1")
 	try:
 		run(args.url, args.window, args.interval,
-			args.csi_threshold, args.audio_threshold)
+			args.csi_threshold, args.audio_threshold,
+			args.push_url or args.url, args.token)
 	except (OSError, ValueError, KeyError) as error:
 		print(f"could not start combined live monitor: {error}", file=sys.stderr)
 		sys.exit(1)

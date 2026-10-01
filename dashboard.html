@@ -4,6 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>PHASE — live zones</title>
+<script defer src="/_vercel/insights/script.js"></script>
 <style>
   :root { --bg:#12171d; --card:#1b232c; --line:#2b3642; --text:#e6edf3;
           --dim:#8b9aa9; --clear:#3fb950; --presence:#d29922; --moving:#f85149; }
@@ -35,6 +36,10 @@
   .bar { height:6px; background:#0d1117; border-radius:3px; overflow:hidden; margin:10px 0; }
   .bar span { display:block; height:100%; background:var(--presence); transition:width .2s; }
   .meta { display:flex; gap:14px; font-size:12px; color:var(--dim); flex-wrap:wrap; }
+  .prediction { display:flex; gap:14px; font-size:12px; color:var(--text); flex-wrap:wrap;
+                margin-top:8px; padding-top:8px; border-top:1px solid var(--line); }
+  .prediction .k { color:var(--dim); }
+  .prediction.stale { color:var(--dim); opacity:.7; }
   .empty { color:var(--dim); padding:40px 0; text-align:center; }
 </style>
 </head>
@@ -63,6 +68,37 @@ const labelEl = document.getElementById('label');
 const zones = new Map();
 let session = null;
 const STALE_MS = 3000;   // nodes report twice a second so 3s of quiet means something broke
+const PRED_STALE_MS = 10000;   // monitor may not be running; grey out old predictions
+
+// the firmware reading and the model prediction arrive on separate messages,
+// so keep the prediction attached to the zone entry instead of overwriting it
+function upsertReading(reading) {
+  const prev = zones.get(reading.zone);
+  reading.prediction = prev && prev.prediction;
+  zones.set(reading.zone, reading);
+}
+
+function attachPrediction(pred) {
+  const zone = zones.get(pred.zone);
+  if (zone) zone.prediction = pred;   // ignore predictions for zones we haven't seen yet
+}
+
+function pct1(x) { return `${Math.round(x * 100)}%`; }
+
+function predictionRow(p, now) {
+  const stale = now - new Date(p.received_at).getTime() > PRED_STALE_MS;
+  const conf = p.csi_probs && p.csi_class != null ? p.csi_probs[p.csi_class] : null;
+  const csi = p.csi_class != null
+    ? `${p.csi_class}${conf != null ? ' ' + pct1(conf) : ''}` : '—';
+  const audio = p.audio_class != null
+    ? `${p.audio_class}${p.audio_prob != null ? ' ' + pct1(p.audio_prob) : ''}` : '—';
+  const score = p.activity_score != null ? `${Math.round(p.activity_score)}/100` : '—';
+  return `<div class="prediction ${stale ? 'stale' : ''}">
+    <span><span class="k">CSI</span> ${csi}</span>
+    <span><span class="k">audio</span> ${audio}</span>
+    <span><span class="k">activity</span> ${score}</span>
+  </div>`;
+}
 
 function render() {
   emptyEl.style.display = zones.size ? 'none' : 'block';
@@ -81,7 +117,8 @@ function render() {
           <span>audio ${z.audio_db} dB</span>
           <span>${z.rssi} dBm</span>
           <span>${(age/1000).toFixed(1)}s ago</span>
-        </div></div>`;
+        </div>
+        ${z.prediction ? predictionRow(z.prediction, now) : ''}</div>`;
     }).join('');
 }
 
@@ -115,10 +152,13 @@ function connect() {
   ws.onmessage = (e) => {
     const msg = JSON.parse(e.data);
     if (msg.type === 'snapshot') {
-      msg.zones.forEach(z => zones.set(z.zone, z));
+      msg.zones.forEach(upsertReading);
+      (msg.predictions || []).forEach(attachPrediction);
       setSession(msg.session);
     } else if (msg.type === 'reading') {
-      zones.set(msg.data.zone, msg.data);
+      upsertReading(msg.data);
+    } else if (msg.type === 'prediction') {
+      attachPrediction(msg.data);
     } else if (msg.type === 'session') {
       setSession(msg.session);
     }

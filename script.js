@@ -1,3 +1,7 @@
+import { inject } from '@vercel/analytics';
+
+inject();
+
 const sceneStage = document.getElementById('scene-stage');
 if (sceneStage) {
   import('./scene.js').catch((error) => {

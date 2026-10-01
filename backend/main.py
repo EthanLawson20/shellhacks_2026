@@ -23,6 +23,7 @@ FLUSH_INTERVAL = 1.0
 ALLOWED_ORIGINS = os.environ.get("ALLOWED_ORIGINS", "*").split(",")
 
 latest: dict[str, dict[str, Any]] = {}
+predictions: dict[str, dict[str, Any]] = {}
 browsers: set[WebSocket] = set()
 pending_rows: list[tuple] = []
 current_session: Optional[int] = None
@@ -127,6 +128,7 @@ async def ws_live(ws: WebSocket):
     await ws.send_text(json.dumps({
         "type": "snapshot",
         "zones": list(latest.values()),
+        "predictions": list(predictions.values()),
         "session": current_session,
     }))
     try:
@@ -150,7 +152,33 @@ async def api_data():
     for z in latest.values():
         age = (now - datetime.fromisoformat(z["received_at"])).total_seconds()
         zones.append({**z, "stale": age > STALE_SECONDS, "age_seconds": round(age, 1)})
-    return {"zones": zones, "session": current_session, "db": db.available()}
+    return {
+        "zones": zones,
+        "predictions": list(predictions.values()),
+        "session": current_session,
+        "db": db.available(),
+    }
+
+
+@app.post("/api/prediction")
+async def api_prediction(body: dict, token: str = ""):
+    if INGEST_TOKEN and token != INGEST_TOKEN:
+        raise HTTPException(401, "bad token")
+    zone = body.get("zone")
+    if not zone:
+        raise HTTPException(422, "prediction is missing a zone")
+    prediction = {
+        "zone": zone,
+        "csi_class": body.get("csi_class"),
+        "csi_probs": body.get("csi_probs"),
+        "audio_class": body.get("audio_class"),
+        "audio_prob": body.get("audio_prob"),
+        "activity_score": body.get("activity_score"),
+        "received_at": datetime.now(timezone.utc).isoformat(),
+    }
+    predictions[zone] = prediction
+    await broadcast({"type": "prediction", "data": prediction})
+    return {"ok": True}
 
 
 @app.post("/api/session/start")
