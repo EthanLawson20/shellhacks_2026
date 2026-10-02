@@ -25,7 +25,7 @@ Built in 36 hours at ShellHacks 2026 (FIU, Miami)
 ## Network Architecture
 
 <p align="center">
-  <img src="images/network_architecture.png"
+  <img src="images/Network Architecture.png"
        alt="Network Architecture"
        width="600">
 </p>
