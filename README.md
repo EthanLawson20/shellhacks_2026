@@ -17,11 +17,12 @@ Built in 36 hours at ShellHacks 2026 (FIU, Miami)
 - Dynamic rescue priority list
 - Real-time dashboard
 
-## Network Architecture
+## System Architecture
 
-<p align="center">
-  <img src="network_architecture.png" alt="Network Architecture">
+![System Architecture](images/System%20Architecture.png)
 </p>
+
+## Network Architecture
 
 1. **Sender** (connected to the computer) transmits packets continuously so nodes always have a signal to measure. A second sender can be added for more coverage.
 2. **Nodes** capture CSI per packet and compute motion and breathing features. The onboard mic runs a small classifier and sends only the label and confidence. Each node also reports its battery level.
