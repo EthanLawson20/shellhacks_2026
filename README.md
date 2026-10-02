@@ -22,12 +22,13 @@ Built in 36 hours at ShellHacks 2026 (FIU, Miami)
 ![System Architecture](images/System%20Architecture.png)
 </p>
 
+
 ## Network Architecture
 
 <p align="center">
-  <img src="images/Network%20Architecture.png"
+  <img src="images/Network%20Architect.png"
        alt="Network Architecture"
-       width="600">
+       width="500">
 </p>
 
 1. **Sender** (connected to the computer) transmits packets continuously so nodes always have a signal to measure. A second sender can be added for more coverage.
