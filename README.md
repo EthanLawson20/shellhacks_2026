@@ -24,7 +24,11 @@ Built in 36 hours at ShellHacks 2026 (FIU, Miami)
 
 ## Network Architecture
 
-![Network Architecture](images/Network%20Architect.png)
+<p align="center">
+  <img src="images/network_architecture.png"
+       alt="Network Architecture"
+       width="600">
+</p>
 
 1. **Sender** (connected to the computer) transmits packets continuously so nodes always have a signal to measure. A second sender can be added for more coverage.
 2. **Nodes** capture CSI per packet and compute motion and breathing features. The onboard mic runs a small classifier and sends only the label and confidence. Each node also reports its battery level.
