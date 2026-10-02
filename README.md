@@ -40,6 +40,7 @@ Built in 36 hours at ShellHacks 2026 (FIU, Miami)
 
 ## Project Structure
 **Hardware**: sender, node, gateway
+
 **Backend**: Audio model, CSI model
 **sensor fusion**: priority engine
 **Frontend**:dashboard
