@@ -10,6 +10,9 @@
     <meta property="og:type" content="website" />
     <link rel="icon" type="image/svg+xml" href="favicon.svg" />
     <link rel="preload" href="fonts/space-grotesk-variable.woff2" as="font" type="font/woff2" crossorigin />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Michroma&display=swap" />
     <link rel="stylesheet" href="styles.css" />
     <script type="module" src="script.js"></script>
     <title>PHASE — See beyond the horizon</title>
@@ -28,10 +31,12 @@
         <nav class="nav" id="primary-nav" aria-label="Primary navigation">
           <a href="#system-architecture">System Architecture</a>
           <a href="#network-architecture">Network Architecture</a>
+          <a href="#hardware">Hardware</a>
           <a href="#ml-architecture">ML Architecture</a>
           <a href="#user-case">User Case</a>
           <a href="#future-developments">Future Developments</a>
-          <a class="nav-cta" id="dashboard-link" href="dashboard.html">Recording dashboard <span aria-hidden="true">→</span></a>
+          <button type="button" class="nav-contact" data-contact-open>Contact us</button>
+          <a class="nav-cta" id="dashboard-link" href="dashboard.html">Live dashboard <span aria-hidden="true">→</span></a>
         </nav>
       </div>
     </header>
@@ -47,8 +52,8 @@
             </div>
         </div>
         <div class="container hero-copy reveal">
-          <h1 id="hero-title">See beyond the horizon with<em> PHASE.</em></h1>
-          <p>PHASE is a network of microcontrollers that combines Wi-Fi sensing and audio analysis to help rescuers identify possible signs of life. Explore the following interactive simulation to see how its network works.</p>
+          <h1 id="hero-title">See beyond the horizon<br /> with <em>PHASE.</em></h1>
+          <p>PHASE is a search-and-rescue system that combines Wi-Fi sensing and audio analysis to help detect signs of life and reduce response time.</p>
         </div>
       </section>
 
@@ -63,6 +68,7 @@
           </figure>
         </div>
       </section>
+
 
       <section class="network-architecture section-pad" id="network-architecture" aria-labelledby="network-architecture-title">
         <div class="container architecture-grid">
@@ -83,15 +89,30 @@
         </div>
       </section>
 
+      <section class="hardware section-pad" id="hardware" aria-labelledby="hardware-title">
+        <div class="container">
+          <h2 class="section-kicker hardware-heading reveal" id="hardware-title"><span class="index">03</span><span>HARDWARE</span></h2>
+          <div class="hardware-grid">
+            <figure class="hardware-card reveal">
+              <div class="hardware-photo hardware-photo-node"><img src="/Node-side.png" width="1448" height="1086" loading="lazy" decoding="async" alt="Angled view of a sensing node showing the compact black enclosure, OLED display, and side port." /></div>
+              <figcaption><h3 class="hardware-tag">Sensing Node</h3><p>A compact, sealed enclosure designed for quick placement around an area.</p></figcaption>
+            </figure>
+            <figure class="hardware-card reveal">
+              <div class="hardware-photo"><img src="/Gateway.png" width="1086" height="1448" loading="lazy" decoding="async" alt="Gateway device: a black handheld enclosure with an external antenna and a small OLED display." /></div>
+              <figcaption><h3 class="hardware-tag">Central Gateway</h3><p>Collects reports from the nodes over its external antenna and forwards them to the room view.</p></figcaption>
+            </figure>
+          </div>
+        </div>
+      </section>
+
       <section class="ml-architecture section-pad" id="ml-architecture" aria-labelledby="ml-architecture-title">
         <div class="container">
           <div class="ml-architecture-heading reveal">
-            <div class="section-kicker"><span class="index">03</span><span>ML ARCHITECTURE</span></div>
-            <div><h2 id="ml-architecture-title">Recognizing signals that <span>may need attention.</span></h2><p>Wi-Fi CSI is compared with a room baseline to identify changes in movement. The audio network shown below is designed to score short microphone samples for patterns associated with human screams.</p></div>
+            <div class="section-kicker" id="ml-architecture-title"><span class="index">04</span><span>ML ARCHITECTURE</span></div>
           </div>
           <figure class="model-figure reveal">
             <div class="model-figure-top"><span>NEURAL NETWORK / AUDIO CLASSIFICATION</span><span>MODEL ARCHITECTURE</span></div>
-            <div class="model-diagram-scroll"><img src="/scream-model.svg"
+            <div class="model-diagram-scroll"><img src="/scream-model.svg" width="1260" height="460" alt="Connected neural network: audio input, Conv1D with 16 channels, max pooling by 2, Conv1D with 32 channels, max pooling by 2, flattening, a dense layer of 64 ReLU units, and one sigmoid output for a possible scream." /></div>
             <figcaption>An audio score indicates a possible scream. It does not establish a person's location or replace on-site verification.</figcaption>
           </figure>
         </div>
@@ -100,7 +121,7 @@
       <section class="user-case section-pad" id="user-case" aria-labelledby="user-case-title">
         <div class="container">
           <div class="user-case-heading reveal">
-            <div class="section-kicker"><span class="index">04</span><span>USER CASE</span></div>
+            <div class="section-kicker"><span class="index">05</span><span>USER CASE</span></div>
             <h2 id="user-case-title">In a rescue, every second spent searching the wrong spot can <span>cost a life.</span></h2>
           </div>
           <div class="user-case-grid">
@@ -113,7 +134,7 @@
 
       <section class="future-developments section-pad" id="future-developments" aria-labelledby="future-developments-title">
         <div class="container">
-          <h2 class="section-kicker future-developments-heading reveal" id="future-developments-title"><span class="index">05</span><span>FUTURE DEVELOPMENTS</span></h2>
+          <h2 class="section-kicker future-developments-heading reveal" id="future-developments-title"><span class="index">06</span><span>FUTURE DEVELOPMENTS</span></h2>
           <div class="deployment-path-grid">
             <article class="deployment-path-card deployment-path-first reveal">
               <div class="deployment-path-art building-art" aria-hidden="true"><span></span><span></span><span></span><span></span><i></i></div>
@@ -127,6 +148,16 @@
         </div>
       </section>
     </main>
-    <footer class="site-footer"><div class="container footer-inner"><a class="brand" href="#top"><svg class="brand-mark" viewBox="0 0 40 40" aria-hidden="true"><path d="M7 28 15 9 32 13 34 30 20 35 7 28 32 13M15 9 20 35M7 28 34 30"/><circle cx="7" cy="28" r="3"/><circle cx="15" cy="9" r="3"/><circle cx="32" cy="13" r="3"/><circle cx="34" cy="30" r="3"/><circle cx="20" cy="35" r="3"/></svg><span>PHASE</span></a><p>Built with &#9825; by Ethan, Jacob, Brayden, and Selena.</p><div><a href="#top">Back to top ↑</a></div></div></footer>
+    <footer class="site-footer"><div class="container footer-inner"><a class="brand" href="#top"><svg class="brand-mark" viewBox="0 0 40 40" aria-hidden="true"><path d="M7 28 15 9 32 13 34 30 20 35 7 28 32 13M15 9 20 35M7 28 34 30"/><circle cx="7" cy="28" r="3"/><circle cx="15" cy="9" r="3"/><circle cx="32" cy="13" r="3"/><circle cx="34" cy="30" r="3"/><circle cx="20" cy="35" r="3"/></svg><span>PHASE</span></a><p>Built with &#9825; by <a class="footer-person" href="https://lawsonethan.com" target="_blank" rel="noopener noreferrer">Ethan</a>, <a class="footer-person" href="https://www.linkedin.com/in/jpotantus/" target="_blank" rel="noopener noreferrer">Jacob</a>, <a class="footer-person" href="https://www.linkedin.com/in/brayden-monthei-284427361/" target="_blank" rel="noopener noreferrer">Brayden</a>, and <a class="footer-person" href="https://www.linkedin.com/in/selenaying/" target="_blank" rel="noopener noreferrer">Selena</a>.</p><div><button type="button" class="footer-contact" data-contact-open>Contact us</button><a href="#top">Back to top ↑</a></div></div></footer>
+    <dialog class="contact-dialog" id="contact-dialog" aria-labelledby="contact-title">
+      <div class="contact-dialog-head">
+        <h2 id="contact-title">Contact us</h2>
+        <button type="button" class="contact-close" data-contact-close aria-label="Close contact information">×</button>
+      </div>
+      <dl class="contact-list">
+        <div><dt>Email</dt><dd><span>selenayingyuan@gmail.com</span><button type="button" class="contact-copy" data-copy="selenayingyuan@gmail.com">Copy</button></dd></div>
+        <div><dt>Phone</dt><dd><span>561-331-3531</span><button type="button" class="contact-copy" data-copy="561-331-3531">Copy</button></dd></div>
+      </dl>
+    </dialog>
   </body>
 </html>

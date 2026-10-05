@@ -8,7 +8,7 @@ const resetButton = document.getElementById('reset-view');
 if (stage && canvas) {
   try {
     const renderer = new THREE.WebGLRenderer({ canvas, alpha: true, antialias: true, powerPreference: 'high-performance' });
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.5));
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
     renderer.outputColorSpace = THREE.SRGBColorSpace;
     renderer.toneMapping = THREE.ACESFilmicToneMapping;
     renderer.toneMappingExposure = 1.55;
@@ -16,10 +16,10 @@ if (stage && canvas) {
     renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 
     const scene = new THREE.Scene();
-    scene.fog = new THREE.Fog(0x0b0d0c, 16, 30);
+    scene.fog = new THREE.Fog(0x0b0d0c, 24, 42);
 
     const camera = new THREE.PerspectiveCamera(32, 1, 0.1, 50);
-    const homePosition = new THREE.Vector3(11.8, 9.4, 12.9);
+    const homePosition = new THREE.Vector3(0, 10.4, 16.6);
     camera.position.copy(homePosition);
 
     const controls = new OrbitControls(camera, canvas);
@@ -131,7 +131,7 @@ if (stage && canvas) {
     const sun = new THREE.DirectionalLight(0xffffff, 3.15);
     sun.position.set(5, 9, 6);
     sun.castShadow = true;
-    sun.shadow.mapSize.set(1024, 1024);
+    sun.shadow.mapSize.set(2048, 2048);
     sun.shadow.camera.left = -11;
     sun.shadow.camera.right = 11;
     sun.shadow.camera.top = 11;
@@ -168,9 +168,10 @@ if (stage && canvas) {
 
     function deviceLabel(label, color, x, y, z) {
       const labelCanvas = document.createElement('canvas');
-      labelCanvas.width = 256;
-      labelCanvas.height = 64;
+      labelCanvas.width = 1024;
+      labelCanvas.height = 256;
       const context = labelCanvas.getContext('2d');
+      context.scale(4, 4);
       context.fillStyle = 'rgba(11, 13, 12, 0.88)';
       context.fillRect(0, 0, 256, 64);
       context.strokeStyle = color;
@@ -183,6 +184,7 @@ if (stage && canvas) {
       context.fillText(label, 128, 33);
       const texture = new THREE.CanvasTexture(labelCanvas);
       texture.colorSpace = THREE.SRGBColorSpace;
+      texture.anisotropy = renderer.capabilities.getMaxAnisotropy();
       const sprite = new THREE.Sprite(new THREE.SpriteMaterial({ map: texture, transparent: true, depthTest: false }));
       sprite.position.set(x, y, z);
       sprite.scale.set(1.55, 0.39, 1);
@@ -376,19 +378,22 @@ if (stage && canvas) {
       if (nextFraming !== framing) {
         if (nextFraming === 'portrait') {
           camera.fov = 48;
-          homePosition.set(16, 11.9, 17.2);
+          homePosition.set(0, 13.2, 21.4);
         } else if (nextFraming === 'compact') {
-          camera.fov = 42;
-          homePosition.set(12.3, 9.5, 13.3);
+          camera.fov = 44;
+          homePosition.set(0, 10.6, 17.1);
         } else {
-          camera.fov = 32;
-          homePosition.set(11.8, 9.4, 12.9);
+          camera.fov = 35;
+          homePosition.set(0, 10.4, 16.6);
         }
         camera.position.copy(homePosition);
         controls.update();
         framing = nextFraming;
       }
       camera.aspect = aspect;
+      // On wide layouts the canvas spans the hero; shift the room right of the headline.
+      if (width > 800) camera.setViewOffset(width, height, -width * 0.08, -height * 0.11, width, height);
+      else camera.clearViewOffset();
       camera.updateProjectionMatrix();
       renderer.setSize(width, height, false);
       renderer.render(scene, camera);
