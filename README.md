@@ -19,14 +19,14 @@ Built in 36 hours at ShellHacks 2026 (FIU, Miami)
 
 ## System Architecture
 
-![System Architecture](images/System%20Architecture.png)
+![System Architecture](images/System-Architecture.png)
 </p>
 
 
 ## Network Architecture
 
 <p align="center">
-  <img src="images/Network%20Architecture.png"
+  <img src="images/Network-Architecture.png"
        alt="Network Architecture"
        width="500">
 </p>
