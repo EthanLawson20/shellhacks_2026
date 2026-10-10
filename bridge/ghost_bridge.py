@@ -33,14 +33,21 @@ def translate(line: dict) -> dict | None:
     zone = line["id"]
     motion = float(line.get("m", 0.0))
     presence = bool(line.get("p", 0))
-    # The firmware's own state isn't in the packet's JSON, so derive a label
-    # from presence + motion for display purposes.
-    if not presence:
-        state = "CLEAR"
-    elif motion > 0.35:
-        state = "MOVING"
+    # newer gateway firmware sends the node's real state as "s". use it when
+    # it's there and known, otherwise fall back to guessing from presence +
+    # motion so old firmware still works.
+    state_raw = line.get("s")
+    if isinstance(state_raw, int) and state_raw in STATE_NAMES:
+        state = STATE_NAMES[state_raw]
+        state_code = state_raw
     else:
-        state = "PRESENCE"
+        if not presence:
+            state = "CLEAR"
+        elif motion > 0.35:
+            state = "MOVING"
+        else:
+            state = "PRESENCE"
+        state_code = None
     reading = {
         "zone": zone,
         "name": ZONE_NAMES.get(zone, f"Zone {zone}"),
@@ -48,6 +55,7 @@ def translate(line: dict) -> dict | None:
         "presence": presence,
         "motion": motion,
         "state": state,
+        "state_code": state_code,
         "audio_db": int(line.get("a", 0)),
         "battery_pct": int(line.get("b", 0)),
         "rssi": int(line.get("r", 0)),

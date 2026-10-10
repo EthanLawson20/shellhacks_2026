@@ -83,10 +83,10 @@ static void handleRadioPacket() {
       totalPackets++;
       ledPulse();
 
-      Serial.printf("{\"id\":\"%c\",\"p\":%u,\"m\":%.2f,\"a\":%u,\"b\":%u,\"r\":%d,\"t\":%lu}\n",
+      Serial.printf("{\"id\":\"%c\",\"p\":%u,\"m\":%.2f,\"a\":%u,\"b\":%u,\"r\":%d,\"t\":%lu,\"s\":%u}\n",
                     (char)pkt.zone, (unsigned)pkt.presence, pkt.motion_x100 / 100.0f,
                     (unsigned)pkt.audio_db, (unsigned)pkt.battery_pct, rssi,
-                    (unsigned long)(millis() / 1000));
+                    (unsigned long)(millis() / 1000), (unsigned)pkt.state);
 
       uint8_t cmd = GHOST_CMD_NONE;
       int zi = zoneIndex(pkt.zone);
