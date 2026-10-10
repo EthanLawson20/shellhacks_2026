@@ -19,7 +19,7 @@
 
 // 1 = print what the CSI callback receives (len, src mac). back to 0 once it works,
 // it costs serial time.
-#define CSI_DIAGNOSTIC 1
+#define CSI_DIAGNOSTIC 0
 
 // 52 usable subcarriers (-26..-1 and +1..+26), handed to us as (I,Q) int8 pairs in
 // FFT order: pair k is subcarrier k for k=0..31 and k-64 for k=32..63. len is 128

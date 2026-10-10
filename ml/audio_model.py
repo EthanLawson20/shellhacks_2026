@@ -1,5 +1,6 @@
 import argparse
 import json
+import os
 import warnings
 import wave
 from pathlib import Path
@@ -13,8 +14,8 @@ from sklearn.model_selection import GroupShuffleSplit
 from tensorflow.keras.callbacks import EarlyStopping, ModelCheckpoint
 import tensorflow as tf
 
-# Path to the dataset directory containing WAV files organized in class labeled folders. Adjust as needed
-dataset_dir = "C:/Users/brady/.cache/kagglehub/datasets/whats2000/human-screaming-detection-dataset/versions/2"
+# repo-relative esp dataset. the wav folder comes from --wav-dir / SCREAM_DATASET_DIR now.
+DEFAULT_DATASET = Path(__file__).resolve().parent.parent / "data" / "dataset.json"
 STFT_FRAME_LENGTH = 1024
 STFT_FRAME_STEP = 256
 TARGET_SAMPLE_RATE = 44100
@@ -544,7 +545,7 @@ def main() -> None:
 		"--format", choices=("wav", "esp-db"), default="esp-db",
 		help="training data format (default: esp-db)",
 	)
-	parser.add_argument("--data", default="dataset.json",
+	parser.add_argument("--data", default=DEFAULT_DATASET,
 					help="ESP dataset JSON path when --format esp-db")
 	parser.add_argument("--output", default="audio_model.keras",
 					help="output model path for --format esp-db")
@@ -558,9 +559,13 @@ def main() -> None:
 					help="readings per temporal patch for ESP CNN input")
 	parser.add_argument("--epochs", type=int, default=30,
 					help="maximum number of training epochs")
+	parser.add_argument("--wav-dir", default=os.environ.get("SCREAM_DATASET_DIR"),
+					help="folder of labelled WAV files for --format wav (default: $SCREAM_DATASET_DIR)")
 	args = parser.parse_args()
 	if args.format == "wav":
-		train_data, val_data = prepare_dataset(dataset_dir)
+		if not args.wav_dir:
+			parser.error("--format wav needs --wav-dir (or set SCREAM_DATASET_DIR)")
+		train_data, val_data = prepare_dataset(args.wav_dir)
 		print(f"Training clips: {len(train_data.examples)}")
 		print(f"Validation clips: {len(val_data.examples)}")
 		for folder_name, class_label in FOLDER_LABELS.items():

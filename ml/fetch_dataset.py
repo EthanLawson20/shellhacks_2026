@@ -17,10 +17,12 @@ import os
 import sys
 from collections import Counter, defaultdict
 from datetime import datetime
+from pathlib import Path
 from urllib.error import HTTPError, URLError
 from urllib.request import Request, urlopen
 
 MAX_GAP_SECONDS = 2.0   # a window spanning a longer bridge dropout is garbage
+DEFAULT_OUTPUT = Path(__file__).resolve().parent.parent / "data" / "dataset.json"
 
 
 def _get_json(base_url: str, path: str, token: str = "", timeout: float = 20.0):
@@ -76,7 +78,7 @@ def main() -> None:
     target = parser.add_mutually_exclusive_group(required=True)
     target.add_argument("--session", type=int, help="a single session id")
     target.add_argument("--all", action="store_true", help="every labelled session")
-    parser.add_argument("--output", default="dataset.json")
+    parser.add_argument("--output", default=DEFAULT_OUTPUT)
     parser.add_argument("--window", type=int, default=20, help="readings per window")
     parser.add_argument("--overlap", type=float, default=0.5,
                         help="fractional overlap between consecutive windows [0, 1)")

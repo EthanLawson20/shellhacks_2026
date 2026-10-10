@@ -2,6 +2,7 @@ import argparse
 import json
 import sys
 from collections import Counter
+from pathlib import Path
 
 import numpy as np
 from sklearn.metrics import accuracy_score, classification_report, confusion_matrix
@@ -19,6 +20,7 @@ PROVISIONAL_MIN_WINDOWS = 50
 SUSPICIOUS_ACCURACY = 0.95
 MAX_EPOCHS = 200
 PATIENCE = 15
+DEFAULT_DATASET = Path(__file__).resolve().parent.parent / "data" / "dataset.json"
 
 # Order matters: it lines up with the feature vector built in _features().
 FEATURE_NAMES = [
@@ -141,7 +143,7 @@ def main() -> None:
     parser = argparse.ArgumentParser(
         description="Train an activity classifier (TF/Keras) with an honest session-grouped split."
     )
-    parser.add_argument("--dataset", default="dataset.json")
+    parser.add_argument("--dataset", default=DEFAULT_DATASET)
     parser.add_argument("--model", default="activity_model_tf",
                          help="output path prefix (writes <prefix>.keras and <prefix>_preproc.joblib)")
     args = parser.parse_args()

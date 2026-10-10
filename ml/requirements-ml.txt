@@ -5,3 +5,7 @@ numpy
 scikit-learn
 joblib
 sounddevice
+tensorflow
+matplotlib
+seaborn
+pyserial   # only for csi_heatmap.py's serial mode

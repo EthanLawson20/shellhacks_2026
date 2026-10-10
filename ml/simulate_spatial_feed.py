@@ -16,7 +16,7 @@ The simulation uses a sample CSI layout from spatial_csi_sample.json, which defi
 the nodes and the baseline amplitudes for each link. The hand is simulated to move in a repeating pattern,
 affecting the CSI amplitudes based on its distance from the signal path.
 """
-SAMPLE_PATH = Path(__file__).with_name("spatial_csi_sample.json")
+SAMPLE_PATH = Path(__file__).resolve().parent.parent / "data" / "spatial_csi_sample.json"
 SAMPLE_RATE_HZ = 10
 HAND_RADIUS_M = 0.35
 HAND_CLEAR_OFFSET_M = 1.1

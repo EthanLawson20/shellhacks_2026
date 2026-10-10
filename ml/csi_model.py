@@ -1,4 +1,6 @@
 import json
+from pathlib import Path
+
 import joblib
 import matplotlib.pyplot as plt
 import numpy as np
@@ -16,14 +18,7 @@ TEST_SIZE = 0.25
 RANDOM_STATE = 0
 MAX_EPOCHS = 200
 MAX_MISCLASSIFICATIONS = 10
-
-# Order matters: it lines up with the feature vector built in _features().
-FEATURE_NAMES = [
-    "motion_mean", "motion_std", "motion_min", "motion_max", "motion_range",
-    "motion_mad", "motion_crossings_0.2",
-    "audio_mean", "audio_std", "audio_min", "audio_max", "audio_range", "audio_mad",
-    "presence_frac", "rssi_mean",
-]
+DEFAULT_DATASET = Path(__file__).resolve().parent.parent / "data" / "dataset.json"
 
 tf.random.set_seed(RANDOM_STATE)
 
@@ -59,7 +54,7 @@ def train_model(model, X_train, y_train, epochs):
 
 
 def main():
-    with open("dataset.json", encoding="utf-8") as dataset_file:
+    with open(DEFAULT_DATASET, encoding="utf-8") as dataset_file:
         windows = json.load(dataset_file).get("windows", [])
     if not windows:
         raise ValueError("dataset.json contains no windows to evaluate")
