@@ -305,7 +305,7 @@ static void audioTask(void* arg) {
 
   if (i2s_driver_install(I2S_NUM_0, &cfg, 0, nullptr) != ESP_OK ||
       i2s_set_pin(I2S_NUM_0, &pins) != ESP_OK) {
-    Serial.println("[NODE] I2S init failed — audio disabled");
+    Serial.println("[NODE] I2S init failed, audio disabled");
     vTaskDelete(nullptr);
     return;
   }
@@ -459,7 +459,7 @@ static void loraHandleCommand(uint8_t cmd) {
   GhostAckPacket ack = { GHOST_MAGIC, GHOST_PKT_ACK, (uint8_t)ZONE_ID, cmd };
   radio.transmit((uint8_t*)&ack, sizeof(ack));
   radioFlag = false;
-  Serial.printf("[NODE] command '%c' from gateway — acked\n", cmd);
+  Serial.printf("[NODE] command '%c' from gateway, acked\n", cmd);
   if (cmd == GHOST_CMD_BASELINE) {
     radar.reset();
   } else if (cmd == GHOST_CMD_REBOOT) {
@@ -519,11 +519,11 @@ static void loraUplink() {
   } else {
     loraMisses++;
     if (loraMisses == LORA_MISSES_BEFORE_RETRY) {
-      Serial.printf("[NODE] no gateway reply for %u packets — retrying last packet\n", (unsigned)loraMisses);
+      Serial.printf("[NODE] no gateway reply for %u packets, retrying last packet\n", (unsigned)loraMisses);
       if (loraSendAndListen(lastPacket)) loraMisses = 0;
     }
     if (loraMisses >= LORA_MISSES_BEFORE_REINIT) {
-      Serial.println("[NODE] gateway silent for a long time — re-initialising LoRa radio");
+      Serial.println("[NODE] gateway silent for a long time, re-initialising LoRa radio");
       loraUp = loraInit();
       loraMisses = LORA_MISSES_BEFORE_RETRY;   // keep the "(no gw)" hint on the OLED
     }

@@ -149,7 +149,7 @@ def main() -> None:
         for label, n in sorted(per_class.items(), key=lambda kv: (-kv[1], kv[0])):
             print(f"  {label:<20} {n}")
     else:
-        print("no windows produced — nothing to train on")
+        print("no windows produced, nothing to train on")
 
 
 if __name__ == "__main__":

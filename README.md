@@ -1,4 +1,4 @@
-<h1 align="center">PHASE — See Beyond the Horizon</h1>
+<h1 align="center">PHASE: See Beyond the Horizon</h1>
 
 <h4 align="left">
 PHASE is a network of microcontrollers that combines Wi-Fi sensing and audio analysis to help rescuers identify possible signs of life.
@@ -33,7 +33,7 @@ Built in 36 hours at ShellHacks 2026 (FIU, Miami)
 
 1. **Sender** (connected to the computer) transmits packets continuously so nodes always have a signal to measure. A second sender can be added for more coverage.
 2. **Nodes** capture CSI per packet and compute motion and breathing features. The onboard mic runs a small classifier and sends only the label and confidence. Each node also reports its battery level.
-3. **Gateway** (connected to the computer) collects data from all nodes and passes it to the computer over [serial / USB — confirm].
+3. **Gateway** (connected to the computer) collects data from all nodes and sends it to the computer over USB serial at 115200 baud, one JSON line per packet.
 4. **ML Models** trained on real data captured by our hardware.
 5. **Fusion engine** on the computer combines CSI and audio per zone into a priority score.
 6. **Dashboard** visualize detections and rescue priorities. 

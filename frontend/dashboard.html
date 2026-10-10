@@ -9,7 +9,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Michroma&display=swap">
-<title>Phase — Live zones</title>
+<title>Phase: Live zones</title>
 <script defer src="/_vercel/insights/script.js"></script>
 <style>
   @font-face { font-family:"Space Grotesk"; src:url("./fonts/space-grotesk-variable.woff2") format("woff2"); font-style:normal; font-weight:300 700; font-display:swap; }
@@ -199,12 +199,16 @@ function pct1(x) { return `${Math.round(x * 100)}%`; }
 
 function predictionRow(p, now) {
   const stale = now - new Date(p.received_at).getTime() > PRED_STALE_MS;
-  const conf = p.csi_probs && p.csi_class != null ? p.csi_probs[p.csi_class] : null;
+  // probs come off the wire, so coerce before pct1 does math on them
+  const rawConf = p.csi_probs && p.csi_class != null ? p.csi_probs[p.csi_class] : null;
+  const conf = Number(rawConf);
   const csi = p.csi_class != null
-    ? `${p.csi_class}${conf != null ? ' ' + pct1(conf) : ''}` : '—';
+    ? `${escapeHtml(p.csi_class)}${rawConf != null && Number.isFinite(conf) ? ' ' + pct1(conf) : ''}` : 'n/a';
+  const audioProb = Number(p.audio_prob);
   const audio = p.audio_class != null
-    ? `${p.audio_class}${p.audio_prob != null ? ' ' + pct1(p.audio_prob) : ''}` : '—';
-  const score = p.activity_score != null ? `${Math.round(p.activity_score)}/100` : '—';
+    ? `${escapeHtml(p.audio_class)}${p.audio_prob != null && Number.isFinite(audioProb) ? ' ' + pct1(audioProb) : ''}` : 'n/a';
+  const activity = Number(p.activity_score);
+  const score = p.activity_score != null && Number.isFinite(activity) ? `${Math.round(activity)}/100` : 'n/a';
   return `<div class="prediction ${stale ? 'stale' : ''}">
     <span><span class="k">CSI</span> ${csi}</span>
     <span><span class="k">audio</span> ${audio}</span>
@@ -258,16 +262,18 @@ function render() {
     .map(z => {
       const age = now - new Date(z.ts).getTime();
       const stale = age > STALE_MS;
-      const pct = Math.min(100, (z.motion / 2) * 100);
+      const motion = Number(z.motion);
+      const motionOk = z.motion != null && Number.isFinite(motion);
+      const pct = motionOk ? Math.max(0, Math.min(100, (motion / 2) * 100)) : 0;
       return `<article class="zone ${escapeHtml(z.state)} ${stale ? 'stale' : ''}">
         <div class="zone-head"><span class="zone-id">ZONE ${escapeHtml(z.zone)}</span><h3>${escapeHtml(z.name)}</h3></div>
         <div class="zone-status">${statusIcon(stale ? 'NO_SIGNAL' : z.state)}<span class="state">${stale ? 'NO SIGNAL' : escapeHtml(z.state)}</span></div>
-        <div class="motion-row"><span>Motion index</span><strong>${z.motion.toFixed(2)}</strong></div>
-        <div class="bar" role="progressbar" aria-label="Motion index" aria-valuemin="0" aria-valuemax="2" aria-valuenow="${z.motion}"><span style="width:${pct}%"></span></div>
+        <div class="motion-row"><span>Motion index</span><strong>${motionOk ? motion.toFixed(2) : 'n/a'}</strong></div>
+        <div class="bar" role="progressbar" aria-label="Motion index" aria-valuemin="0" aria-valuemax="2" aria-valuenow="${motionOk ? motion : 0}"><span style="width:${pct}%"></span></div>
         ${audioGraph(z, stale)}
-        <dl class="readings"><div><dt>Audio level</dt><dd>${z.audio_db} dB</dd></div>
-          <div><dt>Signal</dt><dd>${z.rssi} dBm</dd></div>
-          <div><dt>Battery</dt><dd>${z.battery_pct ?? '—'}${z.battery_pct == null ? '' : '%'}</dd></div></dl>
+        <dl class="readings"><div><dt>Audio level</dt><dd>${escapeHtml(z.audio_db)} dB</dd></div>
+          <div><dt>Signal</dt><dd>${escapeHtml(z.rssi)} dBm</dd></div>
+          <div><dt>Battery</dt><dd>${z.battery_pct == null ? 'n/a' : escapeHtml(z.battery_pct)}${z.battery_pct == null ? '' : '%'}</dd></div></dl>
         ${z.prediction ? predictionRow(z.prediction, now) : ''}
         <div class="zone-footer">${stale ? 'Waiting for a new reading' : `Updated ${(age/1000).toFixed(1)}s ago`}</div>
       </article>`;
@@ -298,7 +304,7 @@ function connect() {
 
   ws.onopen = () => { connEl.textContent = 'live'; dotEl.classList.add('ok'); };
   ws.onclose = () => {
-    connEl.textContent = 'disconnected — retrying';
+    connEl.textContent = 'disconnected, retrying';
     dotEl.classList.remove('ok');
     setTimeout(connect, 2000);
   };

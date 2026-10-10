@@ -99,7 +99,7 @@ def main():
     train_model(model, X_train, y[train_indices], 8)
     model.save('csi_model.keras')
     # Persist the fitted scaler and class order so the saved model is usable at
-    # inference time — raw features must be scaled identically and prediction
+    # inference time. raw features must be scaled identically and prediction
     # indices mapped back to labels the same way they were during training.
     joblib.dump(
         {"scaler": scaler, "classes": encoder.classes_.tolist()},

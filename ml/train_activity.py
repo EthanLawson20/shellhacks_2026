@@ -110,8 +110,8 @@ def _fit(model: keras.Model, X_train, y_train, X_val=None, y_val=None) -> None:
 
 def _print_importances(model: keras.Model, scaler: StandardScaler, X_ref: np.ndarray) -> None:
     """Neural nets have no built-in feature_importances_. Approximate it with a
-    permutation importance against training-set accuracy loss — cruder than the
-    RF's version, but gives the same kind of sanity-check signal."""
+    permutation importance against training-set accuracy loss (cruder than the
+    RF's version, but gives the same kind of sanity-check signal)."""
     base_pred = np.argmax(model.predict(X_ref, verbose=0), axis=1)
     rng = np.random.default_rng(RANDOM_STATE)
     scores = []
@@ -216,7 +216,7 @@ def main() -> None:
     print("(Split by session, so these are entirely separate recordings.)")
     print()
 
-    # Fit the scaler on TRAIN ONLY — fitting on all data would leak test
+    # Fit the scaler on TRAIN ONLY. Fitting on all data would leak test
     # statistics into training, same spirit as the grouped split itself.
     scaler = StandardScaler().fit(X_raw[train_idx])
     X_train = scaler.transform(X_raw[train_idx])
@@ -262,7 +262,7 @@ def main() -> None:
         print(f"- {accuracy:.1%} accuracy is suspicious at this data volume, not a")
         print("  success, more so for a neural net than for a forest. With only a few")
         print("  sessions, a dense network keys on each session's environmental signature")
-        print("  — node placement, RF multipath, the room's audio floor, rssi offset —")
+        print("  (node placement, RF multipath, the room's audio floor, rssi offset)")
         print("  which is constant through a session and rides along with the label. The")
         print("  grouped split kills window-level leakage but NOT this per-session confound,")
         print("  and dropout/early-stopping only slow the memorization, they don't stop it.")
@@ -272,7 +272,7 @@ def main() -> None:
         flagged = True
         print(f"- Provisional classes (<{PROVISIONAL_MIN_WINDOWS} windows): "
               f"{', '.join(provisional)}.")
-        print("  Too few windows for a stable estimate — treat as directional only.")
+        print("  Too few windows for a stable estimate, treat as directional only.")
     if untested:
         flagged = True
         print(f"- No test evidence at all for: {', '.join(untested)}.")
@@ -280,7 +280,7 @@ def main() -> None:
         print("  are empty. The model may still predict them, untested.")
     if single_session_classes:
         flagged = True
-        print(f"- Single-session classes: {', '.join(single_session_classes)} — results")
+        print(f"- Single-session classes: {', '.join(single_session_classes)}. Results")
         print("  not trustworthy (see the warning above).")
     if not flagged:
         print("- No automatic red flags fired, but small-data caveats always apply.")

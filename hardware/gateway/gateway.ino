@@ -134,7 +134,7 @@ static void handleSerialLine(const char* line) {
     return;
   }
   zones[zi].pendingCmd = cmd;
-  Serial.printf("# queued '%c' for zone %c — goes out on its next packet\n", cmd, 'A' + zi);
+  Serial.printf("# queued '%c' for zone %c, goes out on its next packet\n", cmd, 'A' + zi);
 }
 
 static void serialService() {

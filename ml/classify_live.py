@@ -64,7 +64,7 @@ def classify_zone(readings):
     readings is a list of the raw per-packet dicts (each with motion, audio_db,
     presence, rssi, ...). Returns (label, probabilities) where probabilities is a
     dict mapping each class name to its softmax probability. No thresholding is
-    applied here — callers decide what to do with a low-confidence top class.
+    applied here. Callers decide what to do with a low-confidence top class.
     """
     model, scaler, classes = _ensure_loaded()
     features = np.asarray(_features(readings), dtype=float).reshape(1, -1)

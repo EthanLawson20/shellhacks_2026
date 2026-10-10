@@ -1,4 +1,4 @@
-"""GHOST bridge — reads the gateway's USB serial and forwards to the backend.
+"""GHOST bridge: reads the gateway's USB serial and forwards to the backend.
 
 The gateway prints one JSON line per LoRa packet. Its "t" field is seconds
 since the gateway booted, which is useless upstream, so we replace it with a
@@ -116,7 +116,7 @@ async def run(port: str, baud: int, url: str, token: str) -> None:
                     if reading:
                         await ws.send(json.dumps(reading))
         except Exception as e:
-            print(f"[bridge] connection lost ({e}) — retrying in 3 s")
+            print(f"[bridge] connection lost ({e}), retrying in 3 s")
             await asyncio.sleep(3)
 
 

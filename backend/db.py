@@ -34,7 +34,7 @@ async def connect() -> None:
     global _pool
     url = os.environ.get("DATABASE_URL")
     if not url:
-        print("[db] DATABASE_URL not set — running without persistence")
+        print("[db] DATABASE_URL not set, running without persistence")
         return
     # Railway hands out postgres:// ; asyncpg wants postgresql://
     if url.startswith("postgres://"):

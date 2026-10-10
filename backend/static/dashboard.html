@@ -6,7 +6,7 @@
 <meta name="theme-color" content="#0b0d0c">
 <link rel="icon" type="image/svg+xml" href="./favicon.svg">
 <link rel="preload" href="./space-grotesk-variable.woff2" as="font" type="font/woff2" crossorigin>
-<title>Phase — Live zones</title>
+<title>Phase: Live zones</title>
 <style>
   @font-face { font-family:"Space Grotesk"; src:url("./space-grotesk-variable.woff2") format("woff2"); font-style:normal; font-weight:300 700; font-display:swap; }
   :root { --black:#0b0d0c; --white:#fff; --green:#b8f46b; --gray:#1b1f1d;
@@ -255,9 +255,9 @@ function escapeHtml(value) {
 }
 
 function reading(value, unit) {
-  if (value === null || value === undefined || value === '') return '—';
+  if (value === null || value === undefined || value === '') return 'n/a';
   const number = Number(value);
-  return Number.isFinite(number) ? `${number}${unit}` : '—';
+  return Number.isFinite(number) ? `${number}${unit}` : 'n/a';
 }
 
 const STATUS_ICONS = {
@@ -358,7 +358,7 @@ function render() {
       return `<article class="zone ${state} ${stale ? 'stale' : ''}">
         <div class="zone-head"><span class="zone-id">ZONE ${escapeHtml(z.zone)}${demoActive ? '<span class="demo-label">DEMO</span>' : ''}</span><h3>${escapeHtml(z.name || `Zone ${z.zone}`)}</h3></div>
         <div class="zone-status">${statusIcon(stale ? 'NO_SIGNAL' : state)}<span class="state">${displayState}</span></div>
-        <div class="motion-row"><span>Motion index</span><strong>${Number.isFinite(motion) ? motion.toFixed(2) : '—'}</strong></div>
+        <div class="motion-row"><span>Motion index</span><strong>${Number.isFinite(motion) ? motion.toFixed(2) : 'n/a'}</strong></div>
         <div class="bar" role="progressbar" aria-label="Motion index" aria-valuemin="0" aria-valuemax="2" aria-valuenow="${motionValue}"><span style="width:${pct}%"></span></div>
         ${audioGraph(z, stale)}
         <dl class="readings"><div><dt>Audio level</dt><dd>${reading(z.audio_db, ' dB')}</dd></div>
