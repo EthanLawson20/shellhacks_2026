@@ -117,6 +117,9 @@
   .readings div { min-width:0; }
   .readings dt { margin-bottom:4px; color:var(--muted); font-size:11px; }
   .readings dd { margin:0; font-size:14px; font-weight:500; white-space:nowrap; }
+  .readings .sig { display:flex; align-items:center; gap:5px; }
+  .readings .sig-bars { flex:0 0 auto; }
+  .readings .sig-dbm { display:block; margin-top:3px; color:var(--muted); font-size:11px; font-weight:400; }
   .prediction { display:flex; gap:14px; flex-wrap:wrap; margin-top:17px; padding-top:17px;
                 border-top:1px solid var(--line); font-size:12px; }
   .prediction .k { color:var(--muted); }
@@ -200,6 +203,10 @@ const STALE_MS = 3000;   // nodes report twice a second so 3s of quiet means som
 const PRED_STALE_MS = 10000;   // monitor may not be running; grey out old predictions
 const HIGH_PRIORITY = 66;   // rough guesses for where a zone counts as high/medium
 const MED_PRIORITY = 33;
+// rough guesses for our LoRa setup: rssi (dBm) cutoffs for the signal strength word
+const RSSI_STRONG = -90;
+const RSSI_GOOD = -105;
+const RSSI_FAIR = -115;
 
 // demo mode: when nothing live is arriving, show illustrative sample data so the
 // public page isn't blank. never touches the network.
@@ -208,11 +215,26 @@ let demoActive = false;
 let demoTimer = null;
 let demoStep = 0;
 let lastFreshLiveMs = 0;       // last time a fresh live reading landed
-const loadMs = Date.now();
-const DEMO_NO_DATA_MS = 5000;   // nothing live within 5s of load, so show the demo
 const DEMO_STALE_MS = 30000;    // live went quiet for 30s, so demo again
 const DEMO_TICK_MS = 1000;
 const DEMO_PERIOD = 60;         // roughly a minute per loop
+
+// audio level wave: nodes only send audio_db about twice a second (no raw audio),
+// so I keep a short per-zone history and draw it as a wave. one fixed scale so a
+// louder zone actually looks louder.
+const AUDIO_HISTORY = 40;
+const DB_MIN = 65, DB_MAX = 100;   // real nodes report ~70-107 vs the mic's digital scale, clamp outside this
+const liveHistory = new Map();    // zone -> recent audio_db values
+const demoHistory = new Map();
+
+function pushAudio(map, zone, db) {
+  const v = Number(db);
+  if (!Number.isFinite(v)) return;
+  const arr = map.get(zone) || [];
+  arr.push(v);
+  if (arr.length > AUDIO_HISTORY) arr.shift();
+  map.set(zone, arr);
+}
 
 // fresh prediction's activity_score drives the sort, otherwise this zone sinks to -1
 function priorityScore(z, now) {
@@ -230,6 +252,7 @@ function upsertLive(reading) {
   const prev = liveZones.get(reading.zone);
   reading.prediction = prev && prev.prediction;
   liveZones.set(reading.zone, reading);
+  pushAudio(liveHistory, reading.zone, reading.audio_db);
 }
 
 function attachLive(pred) {
@@ -287,28 +310,54 @@ function statusIcon(state) {
   return `<svg class="status-icon" viewBox="0 0 96 96" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${STATUS_ICONS[state] || STATUS_ICONS.NO_SIGNAL}</svg>`;
 }
 
-function waveformSamples(values) {
-  if (!Array.isArray(values) || values.length < 2) return null;
-  const samples = values.map(Number);
-  if (!samples.every(Number.isFinite)) return null;
-  const count = Math.min(samples.length, 96);
-  return Array.from({length:count}, (_, i) => Math.max(-1, Math.min(1,
-    samples[Math.round(i * (samples.length - 1) / (count - 1))])));
+// build a wave from the recent audio_db history. louder readings push bigger
+// peaks, on the fixed DB_MIN..DB_MAX scale so a louder zone actually looks louder.
+function audioWavePath(history) {
+  if (!Array.isArray(history) || history.length < 2) return null;
+  const amps = history.map(db => Math.max(0, Math.min(1, (Number(db) - DB_MIN) / (DB_MAX - DB_MIN))));
+  const N = 120, W = 240, MID = 42, MAXAMP = 34, FREQ = 5;
+  let path = '';
+  for (let i = 0; i < N; i++) {
+    const u = i / (N - 1);
+    const fx = u * (amps.length - 1);               // walk the history across the panel width
+    const lo = Math.floor(fx), hi = Math.min(amps.length - 1, lo + 1);
+    const env = amps[lo] + (amps[hi] - amps[lo]) * (fx - lo);   // loudness envelope
+    const y = MID - Math.sin(u * FREQ * 2 * Math.PI + amps.length * 0.5) * env * MAXAMP;
+    path += `${i ? 'L' : 'M'}${(u * W).toFixed(1)} ${y.toFixed(1)}`;
+  }
+  return path;
 }
 
 function audioGraph(z, stale) {
-  const samples = stale ? null : waveformSamples(z.audio_waveform);
-  const path = samples?.map((sample, i) => `${i ? 'L' : 'M'}${(i * 240 / (samples.length - 1)).toFixed(1)} ${(42 - sample * 35).toFixed(1)}`).join(' ');
+  const history = stale ? null : (demoActive ? demoHistory : liveHistory).get(z.zone);
+  const path = audioWavePath(history);
   const score = z.scream_score === null || z.scream_score === undefined ? NaN : Number(z.scream_score);
   const hasScore = !stale && Number.isFinite(score) && score >= 0 && score <= 1;
   return `<div class="audio-panel">
-    <div class="audio-heading"><span>Microphone waveform</span><strong>${samples ? 'Latest window' : 'No waveform'}</strong></div>
-    <div class="waveform" role="img" aria-label="${samples ? 'Microphone waveform for zone ' + escapeHtml(z.zone) : 'No waveform samples available'}">
+    <div class="audio-heading"><span>Audio level</span><strong>${path ? 'Recent levels' : 'No audio yet'}</strong></div>
+    <div class="waveform" role="img" aria-label="${path ? 'Recent audio levels for zone ' + escapeHtml(z.zone) : 'Collecting audio levels'}">
       <svg viewBox="0 0 240 84" preserveAspectRatio="none" aria-hidden="true"><line x1="0" y1="42" x2="240" y2="42"/>${path ? `<path d="${path}"/>` : ''}</svg>
-      ${samples ? '' : '<span class="waveform-empty">Awaiting waveform samples</span>'}
+      ${path ? '' : '<span class="waveform-empty">Collecting audio levels</span>'}
     </div>
     <div class="audio-result"><span>Scream model score</span><strong class="${hasScore ? 'has-score' : ''}">${hasScore ? `${Math.round(score * 100)}%` : 'No model output'}</strong></div>
   </div>`;
+}
+
+// rssi is LoRa signal strength in dBm (always negative). show a word plus bars so
+// it doesn't read like an error, and keep the real value next to it with a true minus.
+function signalCell(rssi) {
+  const v = Number(rssi);
+  if (rssi == null || !Number.isFinite(v)) return 'n/a';
+  const [word, level] = v >= RSSI_STRONG ? ['Strong', 4]
+    : v >= RSSI_GOOD ? ['Good', 3]
+    : v >= RSSI_FAIR ? ['Fair', 2]
+    : ['Weak', 1];
+  const bars = Array.from({length: 4}, (_, i) => {
+    const h = 4 + i * 3;
+    return `<rect x="${i * 5}" y="${16 - h}" width="3" height="${h}" rx="1" fill="${i < level ? 'var(--green)' : 'var(--line)'}"/>`;
+  }).join('');
+  const dbm = `${String(v).replace('-', '−')} dBm`;   // real minus sign, value unchanged
+  return `<span class="sig"><svg class="sig-bars" viewBox="0 0 18 16" width="18" height="16" aria-hidden="true">${bars}</svg>${word}</span><span class="sig-dbm">${dbm}</span>`;
 }
 
 function render() {
@@ -336,7 +385,7 @@ function render() {
         <div class="bar" role="progressbar" aria-label="Motion index" aria-valuemin="0" aria-valuemax="2" aria-valuenow="${motionOk ? motion : 0}"><span style="width:${pct}%"></span></div>
         ${audioGraph(z, stale)}
         <dl class="readings"><div><dt>Audio level</dt><dd>${escapeHtml(z.audio_db)} dB</dd></div>
-          <div><dt>Signal</dt><dd>${escapeHtml(z.rssi)} dBm</dd></div>
+          <div><dt>Signal</dt><dd>${signalCell(z.rssi)}</dd></div>
           <div><dt>Battery</dt><dd>${z.battery_pct == null ? 'n/a' : escapeHtml(z.battery_pct)}${z.battery_pct == null ? '' : '%'}</dd></div></dl>
         ${z.prediction ? predictionRow(z.prediction, now) : ''}
         <div class="zone-footer">${stale ? 'Waiting for a new reading' : baselining ? 'Keep the area clear while this zone calibrates.' : `Updated ${(age/1000).toFixed(1)}s ago`}</div>
@@ -397,14 +446,17 @@ function demoReadings(ts) {
     ({ zone, csi_class: csiClass, csi_probs: csiProbs, audio_class: audioClass,
        audio_prob: audioProb, activity_score: activity, received_at: ts });
 
+  // A: quiet stairwell, strong signal. both drift a little so it looks live.
+  const aDb = Math.round(80 + 2 * Math.sin(p * 6.3));
+  const aRssi = Math.round(-72 + 5 * Math.sin(p * 6.3));
   let a;
   if (p < 0.2) {
     a = { zone:'A', name:'North Stairwell', ts, presence:false, motion:0.04,
-          state:'BASELINING', state_code:0, audio_db:38, battery_pct:96, rssi:-58, prediction:null };
+          state:'BASELINING', state_code:0, audio_db:aDb, battery_pct:96, rssi:aRssi, prediction:null };
   } else {
     const act = Math.round(12 + 4 * Math.sin(p * 6.3));   // low, wobbles ~8..16 so it can swap with C
     a = { zone:'A', name:'North Stairwell', ts, presence:false, motion:0.05,
-          state:'CLEAR', state_code:1, audio_db:39, battery_pct:95, rssi:-59,
+          state:'CLEAR', state_code:1, audio_db:aDb, battery_pct:95, rssi:aRssi,
           prediction: pred('A','empty',{empty:0.82,standing:0.12,walking:0.06},'quiet',0.05, act) };
   }
 
@@ -417,7 +469,7 @@ function demoReadings(ts) {
   const bMotion = Math.min(1.8, moving ? 0.6 + (p - 0.45) * 2.2 : 0.15 + p * 0.6);
   const b = { zone:'B', name:'Main Corridor', ts, presence:true, motion:bMotion,
     state: moving ? 'MOVING' : 'PRESENCE', state_code: moving ? 3 : 2,
-    audio_db: Math.round(42 + bAct * 0.35), battery_pct:88, rssi:-66,
+    audio_db: Math.round(78 + bAct * 0.185), battery_pct:88, rssi: Math.round(-100 + 4 * Math.sin(p * 6.3 + 1)),
     prediction: pred('B', moving ? 'walking' : 'standing',
       moving ? {empty:0.05,standing:0.25,walking:0.70} : {empty:0.25,standing:0.55,walking:0.20},
       bAct > 60 ? 'loud' : 'quiet', Math.min(0.98, bAct / 100), bAct) };
@@ -426,7 +478,7 @@ function demoReadings(ts) {
   const cAct = cPresent ? 45 : Math.round(10 + 3 * Math.sin(p * 9));
   const c = { zone:'C', name:'East Storeroom', ts, presence:cPresent, motion: cPresent ? 0.3 : 0.05,
     state: cPresent ? 'PRESENCE' : 'CLEAR', state_code: cPresent ? 2 : 1,
-    audio_db: cPresent ? 48 : 40, battery_pct:91, rssi:-70,
+    audio_db: cPresent ? 84 : Math.round(80 + 2 * Math.sin(p * 9)), battery_pct:91, rssi: Math.round(-110 + 3 * Math.sin(p * 6.3 + 2)),
     prediction: pred('C', cPresent ? 'standing' : 'empty',
       cPresent ? {empty:0.35,standing:0.50,walking:0.15} : {empty:0.80,standing:0.14,walking:0.06},
       'quiet', cPresent ? 0.2 : 0.05, cAct) };
@@ -437,7 +489,10 @@ function demoReadings(ts) {
 function nextDemoFrame() {
   const ts = new Date().toISOString();   // refresh every tick so cards never go stale
   zones.clear();
-  for (const z of demoReadings(ts)) zones.set(z.zone, z);
+  for (const z of demoReadings(ts)) {
+    zones.set(z.zone, z);
+    pushAudio(demoHistory, z.zone, z.audio_db);   // build the wave history the same way live does
+  }
   demoStep++;
   render();
 }
@@ -447,6 +502,7 @@ function startDemo() {
   demoActive = true;
   demoNotice.hidden = false;
   demoStep = 0;
+  demoHistory.clear();                     // fresh wave each demo run, builds up over the first few ticks
   nextDemoFrame();                         // paint the first frame right away
   demoTimer = setInterval(nextDemoFrame, DEMO_TICK_MS);
 }
@@ -457,17 +513,15 @@ function stopDemo() {
   demoNotice.hidden = true;
   clearInterval(demoTimer);
   demoTimer = null;
+  demoHistory.clear();                     // drop demo wave history when live takes over
   showLive();                              // live data (including the reading that just landed) takes over
   render();
 }
 
-// start the demo if nothing live shows up in time, and restart it if live goes quiet
+// restart the demo if live goes quiet for a while (initial demo starts at load)
 function demoWatchdog() {
   if (demoActive) return;                  // demo only stops when a fresh live reading arrives
-  const now = Date.now();
-  const idle = lastFreshLiveMs ? now - lastFreshLiveMs : now - loadMs;
-  const limit = lastFreshLiveMs ? DEMO_STALE_MS : DEMO_NO_DATA_MS;
-  if (idle >= limit) startDemo();
+  if (lastFreshLiveMs && Date.now() - lastFreshLiveMs >= DEMO_STALE_MS) startDemo();
 }
 
 function connect() {
@@ -484,6 +538,7 @@ function connect() {
     const now = Date.now();
     if (msg.type === 'snapshot') {
       liveZones.clear();
+      liveHistory.clear();
       msg.zones.forEach(upsertLive);
       (msg.predictions || []).forEach(attachLive);
       setSession(msg.session);
@@ -501,9 +556,10 @@ function connect() {
   };
 }
 
+startDemo();   // show sample data right away; a fresh live reading replaces it the moment it arrives
 connect();
 setInterval(render, 500);   // keeps the "Xs ago" counters ticking
-setInterval(demoWatchdog, 1000);   // flips the demo on when live data is missing or stale
+setInterval(demoWatchdog, 1000);   // restarts the demo if live data goes stale
 </script>
 </body>
 </html>
