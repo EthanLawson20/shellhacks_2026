@@ -69,6 +69,11 @@
                      padding:0 0 22px; margin-bottom:24px; border-bottom:1px solid var(--line); }
   .section-heading h2 { margin:0; font-size:clamp(24px,2.2vw,31px); font-weight:500; letter-spacing:-.04em; }
   .section-index { color:var(--muted); font-weight:400; letter-spacing:0; }
+  .demo-notice { margin:0 0 22px; padding:12px 15px; border-left:2px solid var(--green);
+                 color:var(--white); background:var(--gray); font-size:14px; }
+  .demo-notice[hidden] { display:none; }
+  .demo-label { display:inline-block; margin-left:7px; color:var(--green); font-size:10px;
+                font-weight:700; letter-spacing:.08em; }
   .zones { display:grid; gap:18px; grid-template-columns:repeat(auto-fill,minmax(280px,1fr)); }
   .zone { min-height:365px; padding:27px 24px 22px; background:var(--gray);
           border:1px solid var(--line); border-radius:4px; }
@@ -169,6 +174,7 @@
 
   <section class="zone-section" aria-labelledby="zones-title">
     <div class="section-heading"><h2 id="zones-title">Zone readings</h2><span class="section-index">Highest priority first</span></div>
+    <p class="demo-notice" id="demo-notice" role="status" hidden>Showing sample data. No sensors are connected right now, so these readings are illustrative and never recorded.</p>
     <div class="zones" id="zones"></div>
     <div class="empty" id="empty"><span class="empty-mark" aria-hidden="true"></span><h3>No readings yet</h3><p>Connected zones will appear here when their first reading arrives.</p></div>
   </section>
@@ -186,6 +192,7 @@ const toggle  = document.getElementById('toggle');
 const labelEl = document.getElementById('label');
 const tokenEl = document.getElementById('token');
 const msgEl   = document.getElementById('session-msg');
+const demoNotice = document.getElementById('demo-notice');
 
 const zones = new Map();
 let session = null;
@@ -193,6 +200,19 @@ const STALE_MS = 3000;   // nodes report twice a second so 3s of quiet means som
 const PRED_STALE_MS = 10000;   // monitor may not be running; grey out old predictions
 const HIGH_PRIORITY = 66;   // rough guesses for where a zone counts as high/medium
 const MED_PRIORITY = 33;
+
+// demo mode: when nothing live is arriving, show illustrative sample data so the
+// public page isn't blank. never touches the network.
+const liveZones = new Map();   // real readings kept here even while the demo is on screen
+let demoActive = false;
+let demoTimer = null;
+let demoStep = 0;
+let lastFreshLiveMs = 0;       // last time a fresh live reading landed
+const loadMs = Date.now();
+const DEMO_NO_DATA_MS = 5000;   // nothing live within 5s of load, so show the demo
+const DEMO_STALE_MS = 30000;    // live went quiet for 30s, so demo again
+const DEMO_TICK_MS = 1000;
+const DEMO_PERIOD = 60;         // roughly a minute per loop
 
 // fresh prediction's activity_score drives the sort, otherwise this zone sinks to -1
 function priorityScore(z, now) {
@@ -204,16 +224,30 @@ function priorityScore(z, now) {
 }
 
 // the firmware reading and the model prediction arrive on separate messages,
-// so keep the prediction attached to the zone entry instead of overwriting it
-function upsertReading(reading) {
-  const prev = zones.get(reading.zone);
+// so keep the prediction attached to the zone entry instead of overwriting it.
+// real readings live in liveZones, which keeps collecting even during the demo.
+function upsertLive(reading) {
+  const prev = liveZones.get(reading.zone);
   reading.prediction = prev && prev.prediction;
-  zones.set(reading.zone, reading);
+  liveZones.set(reading.zone, reading);
 }
 
-function attachPrediction(pred) {
-  const zone = zones.get(pred.zone);
+function attachLive(pred) {
+  const zone = liveZones.get(pred.zone);
   if (zone) zone.prediction = pred;   // ignore predictions for zones we haven't seen yet
+}
+
+function liveIsFresh(now) {
+  for (const z of liveZones.values()) {
+    const t = Date.parse(z.received_at || z.ts);
+    if (Number.isFinite(t) && now - t < STALE_MS) return true;
+  }
+  return false;
+}
+
+function showLive() {   // swap whatever real data we have into the render map
+  zones.clear();
+  for (const [k, v] of liveZones) zones.set(k, v);
 }
 
 function pct1(x) { return `${Math.round(x * 100)}%`; }
@@ -296,7 +330,7 @@ function render() {
         : score >= MED_PRIORITY ? '<span class="badge med">Medium priority</span>'
         : '<span class="badge low">Low priority</span>';
       return `<article class="zone ${escapeHtml(z.state)} ${stale ? 'stale' : ''}">
-        <div class="zone-head"><span class="zone-id">ZONE ${escapeHtml(z.zone)}</span><h3>${escapeHtml(z.name)}</h3>${badge}</div>
+        <div class="zone-head"><span class="zone-id">ZONE ${escapeHtml(z.zone)}${demoActive ? '<span class="demo-label">DEMO</span>' : ''}</span><h3>${escapeHtml(z.name)}</h3>${badge}</div>
         <div class="zone-status">${statusIcon(stale ? 'NO_SIGNAL' : z.state)}<span class="state">${stale ? 'NO SIGNAL' : escapeHtml(baselining ? 'CALIBRATING' : z.state)}</span></div>
         <div class="motion-row"><span>Motion index</span><strong>${motionOk ? motion.toFixed(2) : 'n/a'}</strong></div>
         <div class="bar" role="progressbar" aria-label="Motion index" aria-valuemin="0" aria-valuemax="2" aria-valuenow="${motionOk ? motion : 0}"><span style="width:${pct}%"></span></div>
@@ -352,6 +386,90 @@ toggle.onclick = async () => {
   setMsg(`Couldn't ${verb} the session: ${detail || res.status}.`);
 };
 
+// sample data computed from a looping phase, matching the live reading and
+// prediction shapes. three zones over about a minute: A calibrates then clears,
+// B builds from presence into movement, C is calm with one short presence.
+// scores are arranged so the priority badges and the sort both get exercised.
+// no waveform or scream score here since those aren't wired up live yet.
+function demoReadings(ts) {
+  const p = (demoStep % DEMO_PERIOD) / DEMO_PERIOD;
+  const pred = (zone, csiClass, csiProbs, audioClass, audioProb, activity) =>
+    ({ zone, csi_class: csiClass, csi_probs: csiProbs, audio_class: audioClass,
+       audio_prob: audioProb, activity_score: activity, received_at: ts });
+
+  let a;
+  if (p < 0.2) {
+    a = { zone:'A', name:'North Stairwell', ts, presence:false, motion:0.04,
+          state:'BASELINING', state_code:0, audio_db:38, battery_pct:96, rssi:-58, prediction:null };
+  } else {
+    const act = Math.round(12 + 4 * Math.sin(p * 6.3));   // low, wobbles ~8..16 so it can swap with C
+    a = { zone:'A', name:'North Stairwell', ts, presence:false, motion:0.05,
+          state:'CLEAR', state_code:1, audio_db:39, battery_pct:95, rssi:-59,
+          prediction: pred('A','empty',{empty:0.82,standing:0.12,walking:0.06},'quiet',0.05, act) };
+  }
+
+  const moving = p >= 0.45;
+  let bAct = p < 0.1 ? 15 + 60 * p
+           : p < 0.6 ? 21 + (p - 0.1) * 128
+           : p < 0.85 ? 85
+           : 85 - (p - 0.85) * 300;
+  bAct = Math.round(Math.max(12, Math.min(92, bAct)));
+  const bMotion = Math.min(1.8, moving ? 0.6 + (p - 0.45) * 2.2 : 0.15 + p * 0.6);
+  const b = { zone:'B', name:'Main Corridor', ts, presence:true, motion:bMotion,
+    state: moving ? 'MOVING' : 'PRESENCE', state_code: moving ? 3 : 2,
+    audio_db: Math.round(42 + bAct * 0.35), battery_pct:88, rssi:-66,
+    prediction: pred('B', moving ? 'walking' : 'standing',
+      moving ? {empty:0.05,standing:0.25,walking:0.70} : {empty:0.25,standing:0.55,walking:0.20},
+      bAct > 60 ? 'loud' : 'quiet', Math.min(0.98, bAct / 100), bAct) };
+
+  const cPresent = p >= 0.5 && p < 0.62;
+  const cAct = cPresent ? 45 : Math.round(10 + 3 * Math.sin(p * 9));
+  const c = { zone:'C', name:'East Storeroom', ts, presence:cPresent, motion: cPresent ? 0.3 : 0.05,
+    state: cPresent ? 'PRESENCE' : 'CLEAR', state_code: cPresent ? 2 : 1,
+    audio_db: cPresent ? 48 : 40, battery_pct:91, rssi:-70,
+    prediction: pred('C', cPresent ? 'standing' : 'empty',
+      cPresent ? {empty:0.35,standing:0.50,walking:0.15} : {empty:0.80,standing:0.14,walking:0.06},
+      'quiet', cPresent ? 0.2 : 0.05, cAct) };
+
+  return [a, b, c];
+}
+
+function nextDemoFrame() {
+  const ts = new Date().toISOString();   // refresh every tick so cards never go stale
+  zones.clear();
+  for (const z of demoReadings(ts)) zones.set(z.zone, z);
+  demoStep++;
+  render();
+}
+
+function startDemo() {
+  if (demoActive) return;
+  demoActive = true;
+  demoNotice.hidden = false;
+  demoStep = 0;
+  nextDemoFrame();                         // paint the first frame right away
+  demoTimer = setInterval(nextDemoFrame, DEMO_TICK_MS);
+}
+
+function stopDemo() {
+  if (!demoActive) return;
+  demoActive = false;
+  demoNotice.hidden = true;
+  clearInterval(demoTimer);
+  demoTimer = null;
+  showLive();                              // live data (including the reading that just landed) takes over
+  render();
+}
+
+// start the demo if nothing live shows up in time, and restart it if live goes quiet
+function demoWatchdog() {
+  if (demoActive) return;                  // demo only stops when a fresh live reading arrives
+  const now = Date.now();
+  const idle = lastFreshLiveMs ? now - lastFreshLiveMs : now - loadMs;
+  const limit = lastFreshLiveMs ? DEMO_STALE_MS : DEMO_NO_DATA_MS;
+  if (idle >= limit) startDemo();
+}
+
 function connect() {
   const ws = new WebSocket(API.replace('https://', 'wss://') + '/ws/live');
 
@@ -363,23 +481,29 @@ function connect() {
   };
   ws.onmessage = (e) => {
     const msg = JSON.parse(e.data);
+    const now = Date.now();
     if (msg.type === 'snapshot') {
-      msg.zones.forEach(upsertReading);
-      (msg.predictions || []).forEach(attachPrediction);
+      liveZones.clear();
+      msg.zones.forEach(upsertLive);
+      (msg.predictions || []).forEach(attachLive);
       setSession(msg.session);
+      if (liveIsFresh(now)) { lastFreshLiveMs = now; stopDemo(); }
     } else if (msg.type === 'reading') {
-      upsertReading(msg.data);
+      upsertLive(msg.data);
+      lastFreshLiveMs = now;        // a pushed reading means a node just reported, so it's fresh
+      stopDemo();
     } else if (msg.type === 'prediction') {
-      attachPrediction(msg.data);
+      attachLive(msg.data);
     } else if (msg.type === 'session') {
       setSession(msg.session);
     }
-    render();
+    if (!demoActive) { showLive(); render(); }   // demo owns the view until fresh live arrives
   };
 }
 
 connect();
 setInterval(render, 500);   // keeps the "Xs ago" counters ticking
+setInterval(demoWatchdog, 1000);   // flips the demo on when live data is missing or stale
 </script>
 </body>
 </html>
