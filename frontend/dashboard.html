@@ -89,7 +89,7 @@
   .motion-row strong { font-weight:500; }
   .bar { height:5px; margin:0 0 22px; overflow:hidden; background:var(--black); border-radius:5px; }
   .bar span { display:block; height:100%; background:var(--green); transition:width .2s; }
-  .zone.CLEAR .bar span { background:var(--muted); }
+  .zone.CLEAR .bar span,.zone.BASELINING .bar span { background:var(--muted); }
   .audio-panel { margin:0 0 21px; padding-top:18px; border-top:1px solid var(--line); }
   .audio-heading,.audio-result { display:flex; align-items:center; justify-content:space-between; gap:10px; }
   .audio-heading { margin-bottom:10px; color:var(--muted); font-size:12px; }
@@ -229,6 +229,7 @@ const STATUS_ICONS = {
   CLEAR: '<circle cx="48" cy="48" r="32"/><path d="m33 48 10 10 21-22"/>',
   PRESENCE: '<circle cx="48" cy="48" r="33"/><circle cx="48" cy="48" r="22"/><circle cx="48" cy="48" r="8" fill="currentColor" stroke="none"/>',
   MOVING: '<circle cx="49" cy="22" r="7" fill="currentColor" stroke="none"/><path d="m43 37 13 4 8 12M43 37 31 49l-12 2m24-14-4 20 15 9 13 15M39 57 27 72l-14 6M57 41l17-1"/>',
+  BASELINING: '<path d="M60.7 20.8 A30 30 0 1 1 35.3 20.8"/><path d="M50.9 22.5 60.7 20.8 55.7 12.1"/>',
   NO_SIGNAL: '<circle cx="48" cy="48" r="32"/><path d="m25 25 46 46M34 48h28"/>',
 };
 
@@ -270,9 +271,11 @@ function render() {
       const motion = Number(z.motion);
       const motionOk = z.motion != null && Number.isFinite(motion);
       const pct = motionOk ? Math.max(0, Math.min(100, (motion / 2) * 100)) : 0;
+      // show BASELINING as "CALIBRATING", clearer for whoever's watching
+      const baselining = !stale && z.state === 'BASELINING';
       return `<article class="zone ${escapeHtml(z.state)} ${stale ? 'stale' : ''}">
         <div class="zone-head"><span class="zone-id">ZONE ${escapeHtml(z.zone)}</span><h3>${escapeHtml(z.name)}</h3></div>
-        <div class="zone-status">${statusIcon(stale ? 'NO_SIGNAL' : z.state)}<span class="state">${stale ? 'NO SIGNAL' : escapeHtml(z.state)}</span></div>
+        <div class="zone-status">${statusIcon(stale ? 'NO_SIGNAL' : z.state)}<span class="state">${stale ? 'NO SIGNAL' : escapeHtml(baselining ? 'CALIBRATING' : z.state)}</span></div>
         <div class="motion-row"><span>Motion index</span><strong>${motionOk ? motion.toFixed(2) : 'n/a'}</strong></div>
         <div class="bar" role="progressbar" aria-label="Motion index" aria-valuemin="0" aria-valuemax="2" aria-valuenow="${motionOk ? motion : 0}"><span style="width:${pct}%"></span></div>
         ${audioGraph(z, stale)}
@@ -280,7 +283,7 @@ function render() {
           <div><dt>Signal</dt><dd>${escapeHtml(z.rssi)} dBm</dd></div>
           <div><dt>Battery</dt><dd>${z.battery_pct == null ? 'n/a' : escapeHtml(z.battery_pct)}${z.battery_pct == null ? '' : '%'}</dd></div></dl>
         ${z.prediction ? predictionRow(z.prediction, now) : ''}
-        <div class="zone-footer">${stale ? 'Waiting for a new reading' : `Updated ${(age/1000).toFixed(1)}s ago`}</div>
+        <div class="zone-footer">${stale ? 'Waiting for a new reading' : baselining ? 'Keep the area clear while this zone calibrates.' : `Updated ${(age/1000).toFixed(1)}s ago`}</div>
       </article>`;
     }).join('');
 }
