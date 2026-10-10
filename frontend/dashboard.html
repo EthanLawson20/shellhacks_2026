@@ -76,6 +76,11 @@
   .zone-head { text-align:center; }
   .zone-id { display:block; margin-bottom:4px; color:var(--muted); font-size:11px; font-weight:600; letter-spacing:.08em; }
   .zone h3 { margin:0; font-size:25px; font-weight:500; letter-spacing:-.04em; line-height:1.2; }
+  .badge { display:inline-block; margin-top:8px; padding:3px 11px; border-radius:999px;
+           font-size:11px; font-weight:600; letter-spacing:.04em; border:1px solid var(--line); }
+  .badge.high { color:var(--black); background:var(--green); border-color:var(--green); }
+  .badge.med { color:var(--black); background:var(--white); border-color:var(--white); }
+  .badge.low { color:var(--muted); background:transparent; }
   .zone-status { display:flex; flex-direction:column; align-items:center; justify-content:center;
                  gap:10px; min-height:174px; margin:12px 0 20px; text-align:center; color:var(--muted); }
   .status-icon { display:block; width:96px; height:96px; }
@@ -163,7 +168,7 @@
   </section>
 
   <section class="zone-section" aria-labelledby="zones-title">
-    <div class="section-heading"><h2 id="zones-title">Zone readings</h2><span class="section-index">Updates automatically</span></div>
+    <div class="section-heading"><h2 id="zones-title">Zone readings</h2><span class="section-index">Highest priority first</span></div>
     <div class="zones" id="zones"></div>
     <div class="empty" id="empty"><span class="empty-mark" aria-hidden="true"></span><h3>No readings yet</h3><p>Connected zones will appear here when their first reading arrives.</p></div>
   </section>
@@ -186,6 +191,17 @@ const zones = new Map();
 let session = null;
 const STALE_MS = 3000;   // nodes report twice a second so 3s of quiet means something broke
 const PRED_STALE_MS = 10000;   // monitor may not be running; grey out old predictions
+const HIGH_PRIORITY = 66;   // rough guesses for where a zone counts as high/medium
+const MED_PRIORITY = 33;
+
+// fresh prediction's activity_score drives the sort, otherwise this zone sinks to -1
+function priorityScore(z, now) {
+  const p = z.prediction;
+  if (!p || now - new Date(p.received_at).getTime() > PRED_STALE_MS) return -1;
+  if (p.activity_score == null) return -1;   // Number(null) is 0, so check null first
+  const s = Number(p.activity_score);
+  return Number.isFinite(s) ? s : -1;
+}
 
 // the firmware reading and the model prediction arrive on separate messages,
 // so keep the prediction attached to the zone entry instead of overwriting it
@@ -264,7 +280,8 @@ function audioGraph(z, stale) {
 function render() {
   emptyEl.style.display = zones.size ? 'none' : 'block';
   const now = Date.now();
-  zonesEl.innerHTML = [...zones.values()].sort((a,b) => a.zone.localeCompare(b.zone))
+  zonesEl.innerHTML = [...zones.values()]
+    .sort((a,b) => priorityScore(b, now) - priorityScore(a, now) || a.zone.localeCompare(b.zone))
     .map(z => {
       const age = now - new Date(z.ts).getTime();
       const stale = age > STALE_MS;
@@ -273,8 +290,13 @@ function render() {
       const pct = motionOk ? Math.max(0, Math.min(100, (motion / 2) * 100)) : 0;
       // show BASELINING as "CALIBRATING", clearer for whoever's watching
       const baselining = !stale && z.state === 'BASELINING';
+      const score = priorityScore(z, now);
+      const badge = score < 0 ? ''
+        : score >= HIGH_PRIORITY ? '<span class="badge high">High priority</span>'
+        : score >= MED_PRIORITY ? '<span class="badge med">Medium priority</span>'
+        : '<span class="badge low">Low priority</span>';
       return `<article class="zone ${escapeHtml(z.state)} ${stale ? 'stale' : ''}">
-        <div class="zone-head"><span class="zone-id">ZONE ${escapeHtml(z.zone)}</span><h3>${escapeHtml(z.name)}</h3></div>
+        <div class="zone-head"><span class="zone-id">ZONE ${escapeHtml(z.zone)}</span><h3>${escapeHtml(z.name)}</h3>${badge}</div>
         <div class="zone-status">${statusIcon(stale ? 'NO_SIGNAL' : z.state)}<span class="state">${stale ? 'NO SIGNAL' : escapeHtml(baselining ? 'CALIBRATING' : z.state)}</span></div>
         <div class="motion-row"><span>Motion index</span><strong>${motionOk ? motion.toFixed(2) : 'n/a'}</strong></div>
         <div class="bar" role="progressbar" aria-label="Motion index" aria-valuemin="0" aria-valuemax="2" aria-valuenow="${motionOk ? motion : 0}"><span style="width:${pct}%"></span></div>
