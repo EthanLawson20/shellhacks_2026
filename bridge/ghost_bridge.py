@@ -4,13 +4,14 @@ The gateway prints one JSON line per LoRa packet. Its "t" field is seconds
 since the gateway booted, which is useless upstream, so we replace it with a
 real UTC timestamp here. Lines starting with '#' are human chatter; ignored.
 
-    pip install pyserial websockets
-    python ghost_bridge.py --port COM5 --url wss://<your-app>.up.railway.app
+    pip install -r requirements.txt
+    python ghost_bridge.py --port COM5 --url wss://<your-app>.up.railway.app --token <token>
 """
 import argparse
 import asyncio
 import json
 import math
+import os
 from datetime import datetime, timezone
 
 import serial
@@ -97,11 +98,12 @@ def translate(line: dict) -> dict | None:
 async def run(port: str, baud: int, url: str, token: str) -> None:
     ser = serial.Serial(port, baud, timeout=1)
     print(f"[bridge] reading {port} at {baud}")
-    ws_url = f"{url.rstrip('/')}/ws/ingest" + (f"?token={token}" if token else "")
+    ws_url = f"{url.rstrip('/')}/ws/ingest"
+    headers = {"X-Ghost-Token": token}   # backend wants it in the header now
 
     while True:
         try:
-            async with websockets.connect(ws_url) as ws:
+            async with websockets.connect(ws_url, additional_headers=headers) as ws:
                 print(f"[bridge] connected to {url}")
                 while True:
                     raw = await asyncio.to_thread(ser.readline)
@@ -115,6 +117,9 @@ async def run(port: str, baud: int, url: str, token: str) -> None:
                     reading = translate(parsed)
                     if reading:
                         await ws.send(json.dumps(reading))
+        except websockets.exceptions.InvalidStatus:
+            print("[bridge] backend refused the connection, check --token, retrying in 3 s")
+            await asyncio.sleep(3)
         except Exception as e:
             print(f"[bridge] connection lost ({e}), retrying in 3 s")
             await asyncio.sleep(3)
@@ -125,6 +130,11 @@ if __name__ == "__main__":
     p.add_argument("--port", required=True, help="gateway COM port, e.g. COM5")
     p.add_argument("--baud", type=int, default=115200)
     p.add_argument("--url", required=True, help="wss://<app>.up.railway.app")
-    p.add_argument("--token", default="", help="must match GHOST_INGEST_TOKEN")
+    p.add_argument("--token", default=os.environ.get("GHOST_INGEST_TOKEN", ""),
+                   help="must match the backend's GHOST_INGEST_TOKEN "
+                        "(default: $GHOST_INGEST_TOKEN)")
     a = p.parse_args()
+    if not a.token:
+        p.error("no token given; the backend rejects every connection without one. "
+                "Pass --token or set GHOST_INGEST_TOKEN")
     asyncio.run(run(a.port, a.baud, a.url, a.token))

@@ -13,6 +13,7 @@ Standard library + numpy only. Does not touch the backend or compile_dataset.py.
 """
 import argparse
 import json
+import os
 import sys
 from collections import Counter, defaultdict
 from datetime import datetime
@@ -22,10 +23,13 @@ from urllib.request import Request, urlopen
 MAX_GAP_SECONDS = 2.0   # a window spanning a longer bridge dropout is garbage
 
 
-def _get_json(base_url: str, path: str, timeout: float = 20.0):
+def _get_json(base_url: str, path: str, token: str = "", timeout: float = 20.0):
     """GET a JSON document from the backend."""
     url = base_url.rstrip("/") + path
-    request = Request(url, headers={"Accept": "application/json"})
+    headers = {"Accept": "application/json"}
+    if token:
+        headers["X-Ghost-Token"] = token   # session endpoints need the token now
+    request = Request(url, headers=headers)
     with urlopen(request, timeout=timeout) as response:
         return json.loads(response.read().decode("utf-8"))
 
@@ -77,6 +81,9 @@ def main() -> None:
     parser.add_argument("--overlap", type=float, default=0.5,
                         help="fractional overlap between consecutive windows [0, 1)")
     parser.add_argument("--label", help="override the session label for every window")
+    parser.add_argument("--token", default=os.environ.get("GHOST_INGEST_TOKEN", ""),
+                        help="must match the backend's GHOST_INGEST_TOKEN "
+                             "(default: $GHOST_INGEST_TOKEN)")
     args = parser.parse_args()
 
     if args.window < 2:
@@ -88,7 +95,7 @@ def main() -> None:
     min_readings = args.window * 2
 
     try:
-        sessions = _get_json(args.url, "/api/sessions")["sessions"]
+        sessions = _get_json(args.url, "/api/sessions", args.token)["sessions"]
     except (HTTPError, URLError, ValueError, KeyError, TypeError) as error:
         print(f"failed to fetch /api/sessions from {args.url}: {error}", file=sys.stderr)
         sys.exit(1)
@@ -116,7 +123,7 @@ def main() -> None:
             continue
 
         try:
-            readings = _get_json(args.url, f"/api/sessions/{sid}")["readings"]
+            readings = _get_json(args.url, f"/api/sessions/{sid}", args.token)["readings"]
         except (HTTPError, URLError, ValueError, KeyError, TypeError) as error:
             print(f"skip session {sid} ({label!r}): could not fetch readings: {error}")
             continue

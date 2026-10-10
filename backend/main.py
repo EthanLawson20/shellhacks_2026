@@ -1,6 +1,7 @@
 # Gateway is USB only so the laptop bridge has to relay everything up.
 
 import asyncio
+import hmac
 import json
 import os
 from contextlib import asynccontextmanager
@@ -8,7 +9,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Optional
 
-from fastapi import FastAPI, HTTPException, WebSocket, WebSocketDisconnect
+from fastapi import Depends, FastAPI, Header, HTTPException, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import RedirectResponse
 from fastapi.staticfiles import StaticFiles
@@ -19,8 +20,19 @@ INGEST_TOKEN = os.environ.get("GHOST_INGEST_TOKEN", "")
 STALE_SECONDS = 5
 FLUSH_INTERVAL = 1.0
 
-# leaving this as * until vercel gives me a domain
-ALLOWED_ORIGINS = os.environ.get("ALLOWED_ORIGINS", "*").split(",")
+ALLOWED_ORIGINS = os.environ.get("ALLOWED_ORIGINS", "https://shellhacks-2026.vercel.app").split(",")
+
+
+def token_ok(token: str) -> bool:
+    # fail closed: if I never set the token, nothing gets in
+    if not INGEST_TOKEN:
+        return False
+    return hmac.compare_digest(token.encode(), INGEST_TOKEN.encode())
+
+
+async def require_token(x_ghost_token: str = Header(default="")):
+    if not token_ok(x_ghost_token):
+        raise HTTPException(401, "bad token")
 
 latest: dict[str, dict[str, Any]] = {}
 predictions: dict[str, dict[str, Any]] = {}
@@ -66,7 +78,8 @@ async def lifespan(app: FastAPI):
     await db.close()
 
 
-app = FastAPI(title="PHASE backend", lifespan=lifespan)
+app = FastAPI(title="PHASE backend", lifespan=lifespan,
+              docs_url=None, redoc_url=None, openapi_url=None)
 app.mount("/static", StaticFiles(directory=Path(__file__).parent / "static"), name="static")
 
 
@@ -77,15 +90,15 @@ async def dashboard():
 app.add_middleware(
     CORSMiddleware,
     allow_origins=ALLOWED_ORIGINS,
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_credentials=False,
+    allow_methods=["GET", "POST"],
+    allow_headers=["Content-Type", "X-Ghost-Token"],
 )
 
 
 @app.websocket("/ws/ingest")
-async def ws_ingest(ws: WebSocket, token: str = ""):
-    if INGEST_TOKEN and token != INGEST_TOKEN:
+async def ws_ingest(ws: WebSocket):
+    if not token_ok(ws.headers.get("x-ghost-token", "")):
         await ws.close(code=4401)
         return
     await ws.accept()
@@ -160,10 +173,8 @@ async def api_data():
     }
 
 
-@app.post("/api/prediction")
-async def api_prediction(body: dict, token: str = ""):
-    if INGEST_TOKEN and token != INGEST_TOKEN:
-        raise HTTPException(401, "bad token")
+@app.post("/api/prediction", dependencies=[Depends(require_token)])
+async def api_prediction(body: dict):
     zone = body.get("zone")
     if not zone:
         raise HTTPException(422, "prediction is missing a zone")
@@ -181,19 +192,22 @@ async def api_prediction(body: dict, token: str = ""):
     return {"ok": True}
 
 
-@app.post("/api/session/start")
+@app.post("/api/session/start", dependencies=[Depends(require_token)])
 async def session_start(body: dict | None = None):
     global current_session
     if current_session is not None:
         raise HTTPException(409, "a session is already running")
-    current_session = await db.start_session((body or {}).get("label"))
+    label = (body or {}).get("label")
+    # keep labels sane: trim, cap, and treat blank or non-string as no label
+    label = label.strip()[:80] or None if isinstance(label, str) else None
+    current_session = await db.start_session(label)
     if current_session is None:
         raise HTTPException(503, "no database configured")
     await broadcast({"type": "session", "session": current_session})
     return {"session": current_session}
 
 
-@app.post("/api/session/stop")
+@app.post("/api/session/stop", dependencies=[Depends(require_token)])
 async def session_stop():
     global current_session, pending_rows
     if current_session is None:
@@ -207,12 +221,12 @@ async def session_stop():
     return {"stopped": ended}
 
 
-@app.get("/api/sessions")
+@app.get("/api/sessions", dependencies=[Depends(require_token)])
 async def api_sessions():
     return {"sessions": await db.list_sessions()}
 
 
-@app.get("/api/sessions/{session_id}")
+@app.get("/api/sessions/{session_id}", dependencies=[Depends(require_token)])
 async def api_session(session_id: int):
     rows = await db.session_readings(session_id)
     if not rows:

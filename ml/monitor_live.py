@@ -13,7 +13,6 @@ import sys
 import time
 from collections import deque
 from datetime import datetime
-from urllib.parse import quote
 from urllib.request import Request, urlopen
 
 from audio_model import preprocess_db_readings
@@ -45,12 +44,13 @@ def _push_prediction(push_url: str, token: str, prediction: dict) -> None:
 	"""POST one zone's prediction to the backend; never raise."""
 	try:
 		url = f"{push_url.rstrip('/')}/api/prediction"
-		if token:
-			url += f"?token={quote(token)}"
 		body = json.dumps(prediction).encode("utf-8")
+		headers = {"Content-Type": "application/json"}
+		if token:
+			headers["X-Ghost-Token"] = token
 		request = Request(
 			url, data=body, method="POST",
-			headers={"Content-Type": "application/json"},
+			headers=headers,
 		)
 		urlopen(request, timeout=5.0).close()
 	except Exception as error:

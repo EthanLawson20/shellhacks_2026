@@ -49,6 +49,8 @@
                    margin:26px 0 76px; padding:27px 30px; border:1px solid var(--line); border-radius:4px; }
   .session-panel h2 { margin:0 0 6px; font-size:22px; font-weight:500; letter-spacing:-.035em; }
   .session-panel p { margin:0; color:var(--muted); font-size:14px; }
+  #session-msg { margin-top:8px; }
+  #session-msg:empty { display:none; }
   .session-controls { display:flex; align-items:end; gap:10px; }
   .input-wrap { display:grid; gap:9px; min-width:265px; }
   .input-label { color:var(--muted); font-size:12px; }
@@ -119,7 +121,7 @@
   .footer-inner { display:flex; align-items:center; justify-content:space-between; gap:20px; }
   @media(max-width:900px) {
     .session-panel { align-items:start; flex-direction:column; }
-    .session-controls { width:100%; } .input-wrap { flex:1; }
+    .session-controls { width:100%; flex-wrap:wrap; } .input-wrap { flex:1; }
   }
   @media(max-width:600px) {
     .shell { width:min(100% - 36px,1320px); }
@@ -152,9 +154,10 @@
   </section>
 
   <section class="session-panel" aria-labelledby="session-title">
-    <div><h2 id="session-title">Recording session</h2><p>Save incoming readings to review after the response.</p></div>
+    <div><h2 id="session-title">Recording session</h2><p>Save incoming readings to review after the response.</p><p id="session-msg" role="status" aria-live="polite"></p></div>
     <div class="session-controls">
-      <label class="input-wrap"><span class="input-label">Session label</span><input id="label" placeholder="Optional label"></label>
+      <label class="input-wrap"><span class="input-label">Session label</span><input id="label" maxlength="80" placeholder="Optional label"></label>
+      <label class="input-wrap"><span class="input-label">Operator token</span><input id="token" type="password" autocomplete="off" spellcheck="false" placeholder="Required to start or stop"></label>
       <button id="toggle" type="button">Start session</button>
     </div>
   </section>
@@ -176,6 +179,8 @@ const connEl  = document.getElementById('conn');
 const dotEl   = document.getElementById('dot');
 const toggle  = document.getElementById('toggle');
 const labelEl = document.getElementById('label');
+const tokenEl = document.getElementById('token');
+const msgEl   = document.getElementById('session-msg');
 
 const zones = new Map();
 let session = null;
@@ -287,16 +292,39 @@ function setSession(id) {
   labelEl.disabled = !!id;
 }
 
+function setMsg(text) { msgEl.textContent = text; }
+
 toggle.onclick = async () => {
-  if (session) {
-    await fetch(`${API}/api/session/stop`, { method: 'POST' });
-  } else {
-    await fetch(`${API}/api/session/start`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ label: labelEl.value || null })
-    });
+  const token = tokenEl.value;
+  if (!token) {
+    setMsg('Enter the operator token to start or stop a session.');
+    tokenEl.focus();
+    return;
   }
+  const verb = session ? 'stop' : 'start';
+  const opts = { method: 'POST', headers: { 'X-Ghost-Token': token } };
+  if (!session) {
+    opts.headers['Content-Type'] = 'application/json';
+    opts.body = JSON.stringify({ label: labelEl.value.trim() || null });
+  }
+  let res;
+  try {
+    res = await fetch(`${API}/api/session/${verb}`, opts);
+  } catch {
+    setMsg(`Couldn't reach the backend to ${verb} the session. Check the connection and try again.`);
+    return;
+  }
+  if (res.ok) {
+    setMsg('');   // ws "session" message flips the button, so nothing else to do
+    return;
+  }
+  if (res.status === 401) {
+    setMsg('Token rejected. Check it and try again.');
+    return;
+  }
+  let detail;
+  try { detail = (await res.json()).detail; } catch {}
+  setMsg(`Couldn't ${verb} the session: ${detail || res.status}.`);
 };
 
 function connect() {
