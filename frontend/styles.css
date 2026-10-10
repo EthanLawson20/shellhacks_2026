@@ -440,7 +440,7 @@ h1,h2,h3{font-family:var(--body);font-weight:500}
 .system-architecture-figure{width:min(100%,760px);margin:0 auto;border:1px solid var(--line);background:var(--gray)}
 .system-diagram-hint{display:none;margin:0;padding:11px 16px;border-bottom:1px solid var(--line);color:var(--green);font-size:12px}
 .system-diagram-scroll{overflow-x:auto;scrollbar-color:var(--green) var(--gray)}
-.system-diagram-crop{width:100%;min-width:760px;aspect-ratio:886/816;overflow:hidden}
+.system-diagram-crop{width:100%;min-width:760px;aspect-ratio:1600/1560;overflow:hidden}
 .system-diagram-crop img{display:block;width:100%;height:100%;object-fit:cover;object-position:center bottom}
 .system-architecture-figure figcaption{padding:18px 24px;border-top:1px solid var(--line);color:var(--muted);font-size:14px;line-height:1.5}
 .network-architecture .network-architecture-heading,.future-developments .future-developments-heading{display:flex;align-items:center;gap:13px;color:var(--green);font-family:var(--body);font-size:clamp(21px,2vw,28px);font-weight:500;letter-spacing:-.04em;line-height:1.2}
@@ -465,7 +465,7 @@ h1,h2,h3{font-family:var(--body);font-weight:500}
 .hardware{background:linear-gradient(180deg,var(--black),var(--gray));color:var(--white)}
 .hardware .hardware-heading{display:flex;align-items:center;gap:13px;margin:0 0 40px;color:var(--green);font-family:var(--body);font-size:clamp(21px,2vw,28px);font-weight:500;letter-spacing:-.04em;line-height:1.2}
 .hardware .hardware-heading .index{display:grid;place-items:center;width:31px;height:31px;flex:0 0 31px;border:1px solid currentColor;border-radius:50%;font-size:10px;font-weight:700;letter-spacing:0}
-.hardware-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:24px;max-width:960px}
+.hardware-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:24px;margin-inline:auto}
 .hardware-card{display:flex;flex-direction:column;margin:0;border:1px solid var(--line);border-radius:4px;background:var(--gray);overflow:hidden}
 .hardware-photo{position:relative;aspect-ratio:1;overflow:hidden;background:radial-gradient(ellipse at 50% 55%,rgba(184,244,107,.08),transparent 65%),var(--black);border-bottom:1px solid var(--line)}
 .hardware-photo img{position:absolute;inset:6%;display:block;width:88%;height:88%;object-fit:contain}

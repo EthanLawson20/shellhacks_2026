@@ -142,13 +142,16 @@ if (stage && canvas) {
     fill.position.set(-3, 4, -1);
     scene.add(fill);
 
-    // One sender broadcasts to three receivers. Each receiver reports to the gateway.
-    const senderPosition = new THREE.Vector3(0, 2.15, -3.95);
+    // Each node has its own paired sender that broadcasts only to that node. Each node reports to the gateway.
     const nodePositions = [
       new THREE.Vector3(-4.55, 0.55, 1.0),
       new THREE.Vector3(0, 0.55, -1.65),
       new THREE.Vector3(4.45, 0.55, 1.0)
     ];
+    // one sender per node, lifted above and set back a bit so each pair stacks up cleanly
+    const senderPositions = nodePositions.map((position) =>
+      new THREE.Vector3(position.x, 2.0, position.z - 0.9)
+    );
     const gatewayPosition = new THREE.Vector3(0, 0.7, 3.35);
     const displayPosition = new THREE.Vector3(3.75, 0.57, 3.5);
     const nodeBody = material(0x1b1f1d, 0.43, 0.34);
@@ -192,12 +195,14 @@ if (stage && canvas) {
     }
 
     groupStart = scene.children.length;
-    box(0.82, 0.28, 0.28, senderPosition.x, senderPosition.y, senderPosition.z, nodeBody);
-    box(0.5, 0.08, 0.3, senderPosition.x, senderPosition.y + 0.19, senderPosition.z, nodeMetal);
-    const senderBeacon = new THREE.Mesh(new THREE.SphereGeometry(0.075, 16, 12), new THREE.MeshBasicMaterial({ color: 0xffffff, toneMapped: false }));
-    senderBeacon.position.copy(senderPosition).add(new THREE.Vector3(0, 0.25, 0));
-    scene.add(senderBeacon);
-    deviceLabel('SENDER', '#ffffff', senderPosition.x, senderPosition.y + 0.7, senderPosition.z);
+    senderPositions.forEach((position, index) => {
+      box(0.82, 0.28, 0.28, position.x, position.y, position.z, nodeBody);
+      box(0.5, 0.08, 0.3, position.x, position.y + 0.19, position.z, nodeMetal);
+      const senderBeacon = new THREE.Mesh(new THREE.SphereGeometry(0.075, 16, 12), new THREE.MeshBasicMaterial({ color: 0xffffff, toneMapped: false }));
+      senderBeacon.position.copy(position).add(new THREE.Vector3(0, 0.25, 0));
+      scene.add(senderBeacon);
+      deviceLabel(`SENDER ${String.fromCharCode(65 + index)}`, '#ffffff', position.x, position.y + 0.55, position.z);
+    });
     nodePositions.forEach((position, index) => {
       const base = new THREE.Mesh(new THREE.CylinderGeometry(0.09, 0.12, 0.5, 12), nodeMetal);
       base.position.set(position.x, 0.25, position.z);
@@ -211,7 +216,7 @@ if (stage && canvas) {
       light.position.set(position.x, 0.64, position.z);
       scene.add(light);
       horizontalRing(0.32, position.x, 0.035, position.z, 0.56);
-      deviceLabel(`NODE ${index + 1}`, '#b8f46b', position.x, 1.35, position.z);
+      deviceLabel(`NODE ${String.fromCharCode(65 + index)}`, '#b8f46b', position.x, 1.35, position.z);
     });
     box(0.46, 0.55, 0.4, gatewayPosition.x, 0.28, gatewayPosition.z, nodeBody);
     box(0.29, 0.32, 0.025, gatewayPosition.x, 0.36, gatewayPosition.z + 0.215, screen, false);
@@ -294,8 +299,8 @@ if (stage && canvas) {
       return { curve, lineMaterial, packet, opacity };
     }
 
-    const broadcastFlows = nodePositions.map((position) =>
-      flow(senderPosition, position.clone().add(new THREE.Vector3(0, 0.22, 0)), 0xffffff, 0.55, 0.55)
+    const broadcastFlows = nodePositions.map((position, index) =>
+      flow(senderPositions[index], position.clone().add(new THREE.Vector3(0, 0.22, 0)), 0xffffff, 0.55, 0.3)
     );
     const reportFlows = nodePositions.map((position) =>
       flow(position.clone().add(new THREE.Vector3(0, 0.22, 0)), gatewayPosition, 0xb8f46b, 0.55, 0.45)

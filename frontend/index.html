@@ -44,9 +44,9 @@
     <main id="main">
       <section class="hero hero-immersive" aria-labelledby="hero-title">
         <div class="hero-glow" aria-hidden="true"></div>
-        <div class="hero-visual hero-visual-3d" aria-label="Interactive 3D example of a star network with one sender, three sensing nodes, a central gateway, and two illustrative presence areas">
+        <div class="hero-visual hero-visual-3d" aria-label="Interactive 3D example of a network with three sensing nodes, each paired with its own sender, a central gateway, and two illustrative presence areas">
             <div class="scene-stage" id="scene-stage">
-              <canvas id="hero-canvas" class="hero-canvas" aria-label="Interactive 3D room showing one sender broadcasting to three nodes, each node reporting to a gateway connected to a display. Two figures mark illustrative presence areas and are not connected to the nodes."></canvas>
+              <canvas id="hero-canvas" class="hero-canvas" aria-label="Interactive 3D room showing three sensing nodes, each with its own paired sender broadcasting only to that node, and every node reporting to a gateway connected to a display. Two figures mark illustrative presence areas and are not connected to the nodes."></canvas>
               <p class="scene-unavailable" role="status">The interactive room view is unavailable on this device.</p>
               <div class="scene-controls"><button type="button" id="reset-view" aria-label="Reset 3D view">↺ Reset view</button></div>
             </div>
@@ -64,7 +64,7 @@
           </div>
           <figure class="system-architecture-figure reveal">
             <p class="system-diagram-hint">Swipe to explore the full diagram <span aria-hidden="true">→</span></p>
-            <div class="system-diagram-scroll"><div class="system-diagram-crop"><img src="/System-Architecture.png" width="886" height="819" loading="lazy" decoding="async" alt="System architecture diagram with four layers: sender, node, and gateway hardware; audio and CSI analysis; a priority engine; and a dashboard with audio, priority, and heatmap views." /></div></div>
+            <div class="system-diagram-scroll"><div class="system-diagram-crop"><img src="/System-Architecture.png" width="1600" height="1560" loading="lazy" decoding="async" alt="System architecture diagram in five numbered layers. 01 Hardware: each node pairs with its own Wi-Fi sender and talks to a gateway over two-way LoRa. 02 Relay: a bridge on a laptop forwards readings over USB serial and a websocket to a FastAPI backend on Railway with Postgres. 03 Models: an activity model and a loudness model. 04 Priority: a fusion engine that turns activity and loudness into a 0 to 100 score. 05 Dashboard: the live Vercel view with zone status, a priority list, and audio level." /></div></div>
           </figure>
         </div>
       </section>
@@ -75,14 +75,14 @@
           <div class="architecture-visual reveal">
             <h2 class="section-kicker network-architecture-heading" id="network-architecture-title"><span class="index">02</span><span>NETWORK ARCHITECTURE</span></h2>
             <figure class="architecture-figure">
-              <img src="/Network-Architecture.png" alt="Network Architecture" />
+              <img src="/Network-Architecture.png" alt="Network diagram. Senders A, B, and C each broadcast over Wi-Fi to their own paired node (Node A, Node B, Node C). All three nodes report to a central gateway over two-way 915 MHz LoRa. The gateway connects by USB serial to a laptop that runs the bridge, which sends data over a websocket to a backend on Railway that feeds a live dashboard." />
             </figure>
           </div>
           <div class="deployment-panel reveal">
             <h2 id="deployment-guide-title">How to deploy</h2>
             <ol class="deployment-steps">
-              <li><span class="deployment-number">1</span><div><h3>Place the network</h3><p>Position one sender and three receiving nodes around the area. The nodes report their observations to a central gateway.</p><strong>1 sender, 3 receivers, 1 gateway</strong></div></li>
-              <li><span class="deployment-number">2</span><div><h3>Sense and listen</h3><p>Each node observes changes in the sender's Wi-Fi signal through channel state information (CSI). Node microphones provide audio samples for a model designed to flag possible human screams.</p><strong>Wi-Fi CSI + audio classification</strong></div></li>
+              <li><span class="deployment-number">1</span><div><h3>Place the network</h3><p>Position three sensing nodes around the area, each paired with its own sender. The nodes report their observations to a central gateway.</p><strong>3 nodes, 3 paired senders, 1 gateway</strong></div></li>
+              <li><span class="deployment-number">2</span><div><h3>Sense and listen</h3><p>Each node observes changes in its paired sender's Wi-Fi signal through channel state information (CSI). Node microphones provide audio samples for a model designed to flag possible human screams.</p><strong>Wi-Fi CSI + audio classification</strong></div></li>
               <li><span class="deployment-number">3</span><div><h3>Review the room view</h3><p>The gateway brings the observations together for a display of possible areas of activity that responders can assess and verify on site.</p><strong>Estimated activity, human verification</strong></div></li>
             </ol>
           </div>
@@ -94,12 +94,16 @@
           <h2 class="section-kicker hardware-heading reveal" id="hardware-title"><span class="index">03</span><span>HARDWARE</span></h2>
           <div class="hardware-grid">
             <figure class="hardware-card reveal">
+              <div class="hardware-photo"><img src="/Sender.png" width="1448" height="1086" loading="lazy" decoding="async" alt="A paired sender: a small black enclosure with ventilation slots on top and a glowing red status LED." /></div>
+              <figcaption><h3 class="hardware-tag">Paired Sender</h3><p>Pairs with one node and transmits Wi-Fi frames continuously, giving the node a steady signal to measure.</p></figcaption>
+            </figure>
+            <figure class="hardware-card reveal">
               <div class="hardware-photo hardware-photo-node"><img src="/Node-side.png" width="1448" height="1086" loading="lazy" decoding="async" alt="Angled view of a sensing node showing the compact black enclosure, OLED display, and side port." /></div>
-              <figcaption><h3 class="hardware-tag">Sensing Node</h3><p>A compact, sealed enclosure designed for quick placement around an area.</p></figcaption>
+              <figcaption><h3 class="hardware-tag">Sensing Node</h3><p>Detects motion from changes in its sender's Wi-Fi signal, measures how loud the area is, and reports both to the gateway over LoRa.</p></figcaption>
             </figure>
             <figure class="hardware-card reveal">
               <div class="hardware-photo"><img src="/Gateway.png" width="1086" height="1448" loading="lazy" decoding="async" alt="Gateway device: a black handheld enclosure with an external antenna and a small OLED display." /></div>
-              <figcaption><h3 class="hardware-tag">Central Gateway</h3><p>Collects reports from the nodes over its external antenna and forwards them to the room view.</p></figcaption>
+              <figcaption><h3 class="hardware-tag">Central Gateway</h3><p>Receives readings from every node over two-way LoRa, confirms each one, sends commands back when needed, and passes the data to the laptop over USB.</p></figcaption>
             </figure>
           </div>
         </div>
@@ -111,9 +115,9 @@
             <div class="section-kicker" id="ml-architecture-title"><span class="index">04</span><span>ML ARCHITECTURE</span></div>
           </div>
           <figure class="model-figure reveal">
-            <div class="model-figure-top"><span>NEURAL NETWORK / AUDIO CLASSIFICATION</span><span>MODEL ARCHITECTURE</span></div>
-            <div class="model-diagram-scroll"><img src="/scream-model.svg" width="1260" height="460" alt="Connected neural network: audio input, Conv1D with 16 channels, max pooling by 2, Conv1D with 32 channels, max pooling by 2, flattening, a dense layer of 64 ReLU units, and one sigmoid output for a possible scream." /></div>
-            <figcaption>An audio score indicates a possible scream. It does not establish a person's location or replace on-site verification.</figcaption>
+            <div class="model-figure-top"><span>AUDIO MODEL NETWORK / LOUDNESS AND SCREAM</span><span>SHARED CNN ARCHITECTURE</span></div>
+            <div class="model-diagram-scroll"><img src="/scream-model.svg" width="1260" height="460" alt="Convolutional network shared by both audio models. A two dimensional input, a spectrogram for the scream model or a grid of recent loudness readings for the loudness model, flows through Conv2D 16 filters (5 by 5, stride 2), 2 by 2 max pooling, Conv2D 32 filters (3 by 3), 2 by 2 max pooling, Conv2D 64 filters (3 by 3, stride 2), global max pooling, a dense layer of 64 ReLU units, and a sigmoid output giving a 0 to 1 score." /></div>
+            <figcaption>Both audio models share this network. The loudness model runs live on node readings, while the scream model is experimental and runs on a laptop microphone. Either way, a score never establishes a person's location or replaces on-site verification.</figcaption>
           </figure>
         </div>
       </section>
